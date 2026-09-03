@@ -1,0 +1,131 @@
+CORRIGEPROVAS
+
+1. Descrição do Sistema
+O CorrigeProvas é uma aplicação destinada a auxiliar instituições de ensino e operadores na correção de simulados aplicados fora da plataforma. Ele faz a correção de  simulados cadastrados na plataforma comparando o gabarito cadastrado com as respostas informadas e exporta o desempenho de cada aluno. 
+O sistema não aplica provas e não armazena ou exibe seus enunciados, alternativas  completas ou imagens do conteúdo da avaliação. Nele um operador vai realizar o cadastro das  turmas, dos alunos, dos simulados e de seus respectivos gabaritos. O sistema realiza a  correção desses simulados e atribui notas. O operador exporta relatórios de desempenho. A  inclusão das respostas dos alunos será por leitura automatizada dos cartões-resposta por meio  de visão computacional.
+       
+2. Regras de negócio
+As regras abaixo definem o comportamento esperado do sistema. Cada linha  representa uma regra independente.
+RN01
+O sistema deve permitir acesso somente a usuários autenticados e cadastrados  como operadores.
+RN02
+O operador deve ser o usuário autorizado a cadastrar e gerenciar turmas, alunos,  simulados, gabaritos, cartões-resposta e relatórios.
+RN03
+O sistema deve permitir o cadastro de uma turma com identificação, série ou etapa  de ensino, ano ou período letivo e situação.
+RN04
+A identificação de uma turma deve ser suficiente para diferenciá-la de outras  turmas do mesmo período letivo.
+RN05
+O sistema deve permitir o cadastro de alunos antes que eles sejam associados a  um simulado.
+RN06
+Cada aluno deve possuir um código único de identificação para uso no cartão-resposta.
+RN07
+O sistema deve permitir associar cada aluno a uma turma previamente cadastrada.
+RN08
+Um aluno não deve ser associado duas vezes à mesma turma.
+RN09
+O sistema deve permitir criar um simulado somente quando existir uma turma previamente cadastrada para sua associação.
+RN10
+Cada simulado deve estar associado a uma única turma.
+RN11
+O simulado deve possuir título obrigatório, data de aplicação obrigatória e  descrição opcional.
+RN12
+O sistema deve registrar o operador responsável pela criação e pelas alterações 
+do simulado.
+RN13
+O simulado pode ser geral, por área de conhecimento ou multidisciplinar.
+RN14
+O simulado não deve exigir uma disciplina única como atributo próprio.
+RN15
+O sistema deve permitir cadastrar uma ou mais questões para cada simulado.
+RN16
+Cada questão deve possuir um número inteiro positivo, único dentro do simulado.
+RN17
+A numeração das questões deve ser sequencial, preferencialmente iniciada em 1.
+RN18
+Cada questão deve possuir um gabarito obrigatório.
+RN19
+O gabarito de cada questão deve aceitar somente as alternativas A, B, C, D ou E.
+RN20
+O sistema deve permitir associar opcionalmente a cada questão uma área de conhecimento, uma disciplina e um assunto.
+RN21
+A quantidade total de questões deve ser calculada automaticamente pela  quantidade de questões cadastradas no simulado.
+RN22
+O operador não deve informar manualmente a quantidade total de questões.
+RN23
+Ao incluir uma questão válida, o sistema deve atualizar automaticamente a quantidade total de questões.
+RN24
+Ao excluir uma questão permitida, o sistema deve atualizar automaticamente a quantidade total de questões.
+RN25
+O sistema deve utilizar um modelo oficial e padronizado de cartão-resposta.
+RN26
+O cartão-resposta deve conter um campo de identificação do aluno por marcações correspondentes ao seu código.
+RN27
+O cartão-resposta deve conter campos de marcação das alternativas A, B, C, D e  E para cada questão.
+RN28
+O cartão-resposta deve conter elementos de referência que auxiliem o alinhamento e a leitura da imagem.
+RN29
+O sistema deve permitir informar a imagem de um cartão-resposta para processamento por visão computacional.
+RN30
+A visão computacional deve processar, em uma única imagem, a identificação do aluno e as respostas das questões.
+RN31
+O sistema deve verificar se o código identificado pertence a um aluno cadastrado.
+RN32
+O sistema deve verificar se o aluno identificado pertence à turma associada ao simulado.
+RN33
+O sistema deve rejeitar cartões com código inexistente ou incompatível com a turma do simulado.
+RN34
+O sistema deve identificar questões sem alternativa marcada como questões em branco.
+RN35
+O sistema deve identificar questões com mais de uma alternativa marcada como respostas múltiplas ou inválidas.
+RN36
+O sistema não deve escolher automaticamente uma resposta quando a leitura da marcação for ambígua ou apresentar baixa confiança.
+RN37
+Cartões ilegíveis, incompletos, cortados ou com baixa qualidade devem ser encaminhados para revisão do operador.
+RN38
+Cada cartão-resposta deve possuir uma situação de processamento, como pendente, processado, aguardando revisão, validado ou rejeitado.
+RN39
+O resultado de um cartão somente deve ser considerado definitivo quando o processamento for concluído ou a leitura for validada manualmente.
+RN40
+O sistema deve permitir ao operador revisar e confirmar leituras com inconsistências.
+RN41
+O sistema deve impedir, por padrão, mais de um cartão válido para o mesmo aluno e simulado.
+RN42
+A substituição de um cartão válido deve exigir uma ação explícita do operador e manter o histórico da substituição.
+RN43
+A correção deve comparar a resposta identificada para cada questão com o gabarito da questão correspondente.
+RN44
+A resposta igual ao gabarito deve ser contabilizada como correta.
+RN45
+A resposta diferente do gabarito deve ser contabilizada como incorreta.
+RN46
+A questão em branco deve ser contabilizada separadamente e considerada incorreta para o cálculo de acertos, salvo regra posterior em contrário.
+RN47
+A resposta múltipla ou inválida deve ser contabilizada separadamente e não deve ser considerada correta.
+RN48
+Inicialmente, todas as questões devem possuir o mesmo peso no cálculo do resultado.
+RN49
+O sistema deve calcular, no mínimo, o total de questões, os acertos, os erros, as questões em branco, as respostas inválidas e o percentual de aproveitamento.
+RN50
+O percentual de aproveitamento deve ser calculado pela divisão dos acertos pelo total de questões, multiplicada por 100.
+RN51
+O sistema deve permitir exportar um relatório com o resultado de cada aluno processado e validado.
+RN52
+O relatório deve apresentar, no mínimo, nome do aluno, código do aluno, turma, simulado, total de questões, acertos, erros, questões em branco e percentual de aproveitamento.
+RN53
+O sistema deve permitir a exportação de um relatório geral da turma.
+RN54
+O sistema deve permitir, quando necessário, a exportação de um relatório individual por aluno.
+RN55
+O sistema deve considerar na exportação somente resultados processados ou validados.
+RN56
+O sistema não deve aplicar provas nem permitir que o aluno responda à prova diretamente na plataforma.
+RN57
+O sistema não deve armazenar ou exibir enunciados, alternativas completas ou imagens do conteúdo da prova.
+RN58
+O sistema deve registrar as ações relevantes realizadas pelo operador, incluindo cadastros, alterações, processamentos, validações e exportações.
+RN59
+O sistema deve preservar a imagem original do cartão e os dados resultantes da leitura para permitir conferência e auditoria, conforme a política de armazenamento definida.
+RN60
+O sistema deve impedir o acesso do operador a turmas, alunos, simulados e resultados que não estejam dentro de sua autorização.
+
+
