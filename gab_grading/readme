@@ -1,0 +1,133 @@
+# GabGrading: Sistema de Correção de Simulados
+
+## 🚀 Visão Geral do Projeto
+
+O GabGrading é um sistema robusto e intuitivo projetado para o cadastro e gerenciamento eficiente de simulados. Ele permite que professores ou gestores da aplicação organizem seus simulados e os gabaritos das questões de múltipla escolha associadas de forma centralizada. A entidade central do sistema é o `Simulado`, que carrega a posse do usuário, o mecanismo de `soft delete` e é o alvo direto das buscas e filtros. A `Questão` é uma entidade dependente, existindo sempre atrelada a um simulado específico.
+
+O sistema conta com autenticação completa, controle de posse dos dados por usuário e um mecanismo de exclusão reversível (`soft delete`) para preservar a integridade histórica dos registros.
+
+**Foco Atual:** Gerenciamento de simulados e questões.
+**Expansão Futura:** Funcionalidades de aplicação de simulados, registro de respostas de alunos e correção automática foram identificadas como evolução natural do projeto, mas ficam fora do escopo atual e estão registradas como expansão futura, como outro ciclo incremental do sistema.
+
+---
+
+## ✨ Funcionalidades Detalhadas
+
+### 🔐 Autenticação e Usuários
+
+*   **Cadastro Seguro:** O e-mail é único no sistema, e as senhas são armazenadas como hash, nunca em texto puro.
+*   **Login com JWT:** O login confere o hash da senha e, se correto, emite um token JWT para autenticação.
+*   **Controle de Acesso:** Todas as rotas de `Simulado` e `Questão` exigem um token válido; sem ele, a resposta é `401 Unauthorized`.
+*   **Posse de Dados:** O `usuario_id` de um `Simulado` ou `Questão` é sempre extraído do token do usuário logado, impedindo a manipulação de dados de outros usuários.
+*   **Soft Delete de Usuário:** A exclusão de conta é um `soft delete` (`ativo` passa para `false`). Contas inativas não conseguem logar.
+
+### 📝 Gerenciamento de Simulados (CRUD)
+
+*   **Criação e Edição:** `identificacao` e `data_aplicacao` são campos obrigatórios e não podem ser vazios.
+*   **Controle de Posse:** Um usuário só pode listar, ver, editar ou apagar os próprios simulados; tentativas de acesso a simulados de outros usuários resultam em `403 Forbidden`.
+*   **Soft Delete de Simulado:** A exclusão de `Simulado` também é um `soft delete` (`ativo` passa para `false`), preservando o histórico e a integridade com `Questões` vinculadas.
+
+### ❓ Gerenciamento de Questões
+
+*   **Numeração Automática:** `numero_questao` é atribuído automaticamente pelo sistema em sequência crescente dentro do simulado.
+*   **Alternativa Correta:** `alternativa_correta` é um enum fechado (A, B, C, D, E), nunca texto livre.
+*   **Conteúdo Opcional:** O campo `conteudo` é opcional para a descrição da questão.
+*   **Posse de Questão:** Toda `Questão` precisa apontar para um `simulado_id` que exista e pertença ao usuário logado.
+*   **Visibilidade Herdada:** A visibilidade de uma `Questão` é herdada do `Simulado` ao qual ela pertence; se o `Simulado` estiver inativo, suas `Questões` não são retornadas.
+
+### 🔍 Busca e Filtro
+
+*   **Simulados:** A listagem de simulados aceita busca por `identificacao` e, opcionalmente, filtro por período de `data_aplicacao`.
+*   **Questões:** A listagem de `Questões` de um simulado aceita busca ou ordenação por `numero_questao`.
+
+### ✅ Validação e Respostas
+
+*   **Validação Dupla:** A validação ocorre tanto no formulário (frontend) quanto na API (backend) antes de gravar, sem confiar apenas na validação da tela.
+*   **Respostas Claras:** Toda ação de criar, editar ou apagar retorna uma resposta clara (sucesso com o registro afetado ou erro com mensagem compreensível), nunca um `500 genérico`.
+*   **Listagens Padrão:** Todas as listagens (GET) filtram por padrão apenas registros com `ativo = true`.
+
+---
+
+## 🛠️ Entidades e Atributos Chave
+
+### 👤 Usuário
+
+| Atributo    | Tipo    | Restrições                               |
+| :---------- | :------ | :--------------------------------------- |
+| `id`        | Serial  | Chave primária, NOT NULL                 |
+| `nome`      | Varchar | NOT NULL                                 |
+| `email`     | Varchar | NOT NULL, único                          |
+| `senha_hash`| Varchar | NOT NULL                                 |
+| `ativo`     | Boolean | NOT NULL, padrão `true`                  |
+
+### 📝 Simulado
+
+| Atributo          | Tipo    | Restrições                               |
+| :---------------- | :------ | :--------------------------------------- |
+| `id`              | Serial  | Chave primária, NOT NULL                 |
+| `identificacao`   | Varchar | NOT NULL                                 |
+| `data_aplicacao`  | Date    | NOT NULL                                 |
+| `usuario_id`      | Integer | Chave estrangeira (`Usuário`), NOT NULL  |
+| `ativo`           | Boolean | NOT NULL, padrão `true`                  |
+
+### ❓ Questão
+
+| Atributo              | Tipo                       | Restrições                               |
+| :-------------------- | :------------------------- | :--------------------------------------- |
+| `id`                  | Serial                     | Chave primária, NOT NULL                 |
+| `numero_questao`      | Integer                    | NOT NULL, gerado automaticamente         |
+| `alternativa_correta` | Enum (A, B, C, D, E)       | NOT NULL, conjunto fechado               |
+| `conteudo`            | Text                       | Opcional                                 |
+| `simulado_id`         | Integer                    | Chave estrangeira (`Simulado`), NOT NULL |
+
+---
+
+## 🔗 Relacionamentos
+
+*   **Usuário 1 — N Simulado:** Cada usuário pode possuir muitos simulados; cada simulado pertence a um único usuário.
+*   **Simulado 1 — N Questão:** Cada simulado pode possuir muitas questões; cada questão pertence a um único simulado.
+
+---
+
+## 🏗️ Decisões de Arquitetura
+
+*   **Organização Vertical:** Estrutura de pastas vertical por entidade (ex: `simulados/`, `questoes/`, `usuarios/`), contendo seus respectivos `models.py`, `schemas.py`, `erros.py`, `repository.py`, `service.py` e `controller.py`. Não existe uma pasta `controllers/` ou `services/` única para o projeto inteiro.
+*   **Import Cruzado:** Imports entre pastas de entidade são permitidos e esperados, dado que `Questão` depende de `Simulado`.
+*   **Tratamento de Erros:** O arquivo `erros.py` de cada entidade contém apenas as recusas específicas daquela entidade (ex: `SimuladoNaoEncontrado`). O tradutor de exceções (`@app.exception_handler`) é único, registrado no `main.py` para a classe-mãe de erro de cada entidade.
+
+---
+
+## ⚙️ Tecnologias Utilizadas (Stack)
+
+Este projeto será desenvolvido utilizando as seguintes tecnologias:
+
+*   **Backend:** Python com FastAPI
+*   **Banco de Dados:** PostgreSQL
+*   **ORM:** SQLAlchemy
+*   **Containerização:** Docker
+*   **Controle de Versão:** Git e GitHub
+*   **Gerenciamento de Dependências:** Poetry
+
+---
+
+## 📓 Diário de Decisões (Programação III)
+
+Este projeto será acompanhado por um "Diário de Decisões", um registro das escolhas arquiteturais e de design tomadas ao longo do desenvolvimento. Ele documentará o problema enfrentado, as alternativas consideradas, a decisão final e suas consequências, servindo como base para a defesa da arquitetura no final da disciplina.
+
+---
+
+## 🚀 Como Rodar o Projeto (Em Breve)
+
+Instruções detalhadas para configurar o ambiente de desenvolvimento, instalar dependências e iniciar o servidor serão adicionadas aqui nos próximos encontros, conforme o ambiente for sendo configurado em Programação Web III.
+
+---
+
+## 🤝 Contribuição e Histórico
+
+O histórico de commits no Git é parte fundamental da avaliação. Serão valorizados commits pequenos e bem descritos, seguindo o padrão `tipo: descrição no imperativo` (ex: `feat: adiciona endpoint de listagem de simulados`, `docs: atualiza README com ficha do projeto`).
+
+---
+
+## 🖼️ Protótipo Frontend
+
+Uma pasta `prototipo/` conterá os prints das telas essenciais do frontend, servindo como referência visual para o desenvolvimento do backend.
