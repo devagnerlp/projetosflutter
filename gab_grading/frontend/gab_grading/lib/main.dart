@@ -402,7 +402,7 @@ class StatusChip extends StatelessWidget {
     return Chip(
       avatar: Icon(Icons.check_circle, color: color, size: 17),
       label: Text(label),
-      backgroundColor: color.withOpacity(.10),
+      backgroundColor: color.withValues(alpha: .10),
       side: BorderSide.none,
       labelStyle: TextStyle(
         color: color,
@@ -650,10 +650,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  Card(
-                    color: const Color(0xFFEAF2FA),
+                  const Card(
+                    color: Color(0xFFEAF2FA),
                     elevation: 0,
-                    child: const Padding(
+                    child: Padding(
                       padding: EdgeInsets.all(18),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1451,7 +1451,7 @@ class _ResumoCard extends StatelessWidget {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: color.withOpacity(.12),
+                backgroundColor: color.withValues(alpha: .12),
                 foregroundColor: color,
                 child: Icon(icon),
               ),
@@ -2432,7 +2432,7 @@ class _QuestaoDetalheCard extends StatelessWidget {
             color: Theme.of(context)
                 .colorScheme
                 .primary
-                .withOpacity(.10),
+                .withValues(alpha: .10),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
