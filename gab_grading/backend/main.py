@@ -17,4 +17,5 @@ def listar_simulados():
         {"id": 1, "identificacao": "Simulado ENEM 2024", "data_aplicacao": "2024-11-01", "usuario_id": 1},
         {"id": 2, "identificacao": "Simulado Vestibular IFG", "data_aplicacao": "2025-01-15", "usuario_id": 1},
         {"id": 3, "identificacao": "Simulado Medicina", "data_aplicacao": "2025-06-20", "usuario_id": 2},
+        {"id": 4, "identificacao": "Simulado UFJ", "data_aplicacao": "2025-08-20", "usuario_id": 2},
     ]
