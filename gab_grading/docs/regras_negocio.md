@@ -6,7 +6,7 @@ Usuário (Autenticação) 👤🔐
 🔒 RN-02- A senha nunca é armazenada em texto puro — apenas o hash dela é gravado.
 🎫 RN-03-  O login confere o hash da senha e, se bater, emite um token JWT.
 🚫 RN-04- Toda rota de Simulado e de Questão exige um token válido; sem ele, a resposta é 401 Unauthorized.
-🛡️ RN-05- O usuario_id de um Simulado nunca vem do corpo da requisição — é sempre extraído do token de quem está logado, para impedir que alguém crie ou edite dados em nome de outro usuário.
+🛡️ RN-05- O usuario_id de um Simulado nunca vem do corpo da requisição — é sempre extraído do token de quem está logado, para impedir que alguém crie ou edite dados em nome de outro usuário
 🗑️ RN-06- Exclusão de conta é soft delete: o campo ativo passa de true para false. O login deve checar ativo = true além de e-mail e senha — uma conta inativa não consegue logar, mesmo com credenciais corretas.
 
 Simulado 📝
