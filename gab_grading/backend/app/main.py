@@ -10,7 +10,8 @@ from .simulados.erros import ErroDeSimulado, SimuladoNaoEncontrado
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="API do GabGrading", version="0.3.0")
-app.include_router(simulados_controller.router)
+# é um app por rota nova (entidade nova) que criamos, e o controller é quem sabe quais rotas existem. O app não sabe nada de simulados, só sabe que existe um controller que sabe.
+app.include_router(simulados_controller.router) #realiza guarda de rotas do controller de simulados - Padrão composite
 
 @app.exception_handler(ErroDeSimulado)
 def traduzir_recusa(request: Request, erro: ErroDeSimulado):
