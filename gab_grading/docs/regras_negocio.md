@@ -12,8 +12,8 @@ Usuário (Autenticação) 👤🔐
 Simulado 📝
 
 ⚠️ RN-07- identificacao e data_aplicacao são obrigatórios e não podem chegar vazios, tanto no formulário quanto na validação da API.
-👤🔒 RN-08- Um usuário só pode listar, ver, editar ou apagar os próprios simulados; tentativa de acessar um simulado de outro usuário retorna 403 Forbidden.
-🗂️ RN-09- Exclusão de Simulado também é soft delete: o campo ativo passa para false, e o registro nunca é removido de fato do banco — o que evita erro de integridade com as Questões já vinculadas a ele e preserva o histórico.
+👤🔒 RN-08- Um usuário só pode listar, ver, editar ou apagar os próprios simulados; tentativa de acessar um simulado de outro usuário retorna 403 Forbidden. 
+🗂️ RN-09- Exclusão de Simulado também é soft delete: o campo ativo passa para false, e o registro nunca é removido de fato do banco — o que evita erro de integridade com as Questões já vinculadas a ele e preserva o histórico. **Implementada**
 
 Questão ❓
 
@@ -28,4 +28,4 @@ Regras Transversais 🔄
 📊 RN-15- A listagem de Questões de um simulado aceita busca ou ordenação por numero_questao.
 💬 RN-16- Toda ação de criar, editar ou apagar retorna uma resposta clara — sucesso com o registro afetado, ou erro com mensagem compreensível — nunca um 500 genérico.
 ✔️ RN-17- Validação acontece nas duas pontas: no formulário antes de enviar, e na API antes de gravar, sem confiar apenas na validação da tela.
-📌 RN-18- Toda listagem (GET) filtra por padrão apenas registros com ativo = true — um registro "excluído" não aparece mais nas telas, mesmo continuando no banco.
+📌 RN-18- Toda listagem (GET) filtra por padrão apenas registros com ativo = true — um registro "excluído" não aparece mais nas telas, mesmo continuando no banco. **Implementada**

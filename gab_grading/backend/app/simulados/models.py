@@ -3,7 +3,7 @@ from sqlalchemy import Boolean, Column, Date, Integer, String
 from ..database import Base
 
 class Simulado(Base): # faz elo com Base do SQLAlchemy, que sabe quais tabelas existem
-    """A TABELA que vra linha no banco.
+    """A TABELA que vira linha no banco.
     diferente de schema que atravessa a fronteira da API, 
     """
 
