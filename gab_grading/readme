@@ -114,6 +114,12 @@ Este projeto será desenvolvido utilizando as seguintes tecnologias:
 
 Este projeto será acompanhado por um "Diário de Decisões", um registro das escolhas arquiteturais e de design tomadas ao longo do desenvolvimento. Ele documentará o problema enfrentado, as alternativas consideradas, a decisão final e suas consequências, servindo como base para a defesa da arquitetura no final da disciplina.
 
+🖊️ *Diário de decisões — Encontro 5 (Repository)*
+Como já estava usando SQLAlchemy, verifiquei que parte do padrão Repository já vem embutido com a Session, então pensei em não criar essa camada separada. Mas decidi manter mesmo assim, porque duas das minhas regras de negócio não são só "buscar e salvar": a RN09 diz que excluir um simulado é soft delete (só marca ativo = False, nunca apaga de verdade) e a RN18 diz que toda listagem deve mostrar só os ativos por padrão. Se eu deixasse isso solto no service.py, a regra de negócio ficaria misturada com o jeito de mexer no banco (o .filter() e o .commit() do SQLAlchemy). Por isso criei o repository.py com métodos de nome de negócio (listar, buscar, criar, atualizar, desativar), que escondem esse "como" e devolvem sempre objetos Simulado, nunca tuplas ou dicionários crus.
+Para confirmar que a separação funcionou, abri o service.py e procurei por Session e .query. Não achei nenhum: ele só recebe o db e repassa para o repositório, sem saber o que fazer com ele. A diferença para o exemplo da aula é que não tenho um dependencias.py separado; quem escolhe e entrega a conexão é o próprio Depends(get_db) do FastAPI. No meu caso concluo que o Repository valeu a pena, não por causa de uma futura troca de banco, mas porque ele já esconde o soft delete e o filtro padrão. Caso meu projeto tivessse apenas um CRUD simples, sem essas duas regras, talvez eu teria decidido não criar essa camada.
+
+
+
 ---
 
 ## 🚀 Como Rodar o Projeto (Em Breve)
