@@ -3,9 +3,12 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from . import service
+from ..seguranca import get_current_user
+from ..usuarios.models import Usuario
 from .schemas import SimuladoAtualizar, SimuladoCriar, SimuladoPublico
 
-router = APIRouter(prefix="/simulados", tags=["Simulados"])
+router = APIRouter(prefix="/simulados", tags=["Simulados"], 
+                   dependencies=[Depends(get_current_user)])
 
 # Nenhum `if` de regra e nenhum `try` aqui: as recusas do Service viram
 # HTTP no tradutor registrado no main.py, uma vez para todas as rotas.
@@ -15,8 +18,10 @@ def listar(db: Session = Depends(get_db)):
     return service.listar(db)
 
 @router.post("/", response_model=SimuladoPublico, status_code=201)
-def criar(dados: SimuladoCriar, db: Session = Depends(get_db)):
-    return service.criar(db, dados.model_dump())
+def criar(dados: SimuladoCriar, db: Session = Depends(get_db),
+          usuario: Usuario = Depends(get_current_user)):        
+    return service.criar(db, {**dados.model_dump(), "usuario_id": usuario.id})
+# RN-05: o usuario_id nunca vem do corpo -- vem de quem esta logado.
 
 @router.get("/{simulado_id}", response_model=SimuladoPublico)
 def buscar(simulado_id: int, db: Session = Depends(get_db)):
