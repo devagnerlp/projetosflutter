@@ -2,17 +2,17 @@ Regras de Negócio 📋
 
 **Usuário (Autenticação)** 👤🔐
 
-📧 RN-01- O e-mail é único no sistema; o cadastro rejeita e-mail já existente, retornando uma mensagem clara em vez de um erro genérico de banco.
+📧 RN-01- O e-mail é único no sistema; o cadastro rejeita e-mail já existente, retornando uma mensagem clara em vez de um erro genérico de banco. **Implementada**
 
-🔒 RN-02- A senha nunca é armazenada em texto puro — apenas o hash dela é gravado.
+🔒 RN-02- A senha nunca é armazenada em texto puro — apenas o hash dela é gravado.**Implementada**
 
-🎫 RN-03-  O login confere o hash da senha e, se bater, emite um token JWT.
+🎫 RN-03-  O login confere o hash da senha e, se bater, emite um token JWT. **Implementada**
 
-🚫 RN-04- Toda rota de Simulado e de Questão exige um token válido; sem ele, a resposta é 401 Unauthorized.
+🚫 RN-04- Toda rota de Simulado e de Questão exige um token válido; sem ele, a resposta é 401 Unauthorized. **Implementada**
 
-🛡️ RN-05- O usuario_id de um Simulado nunca vem do corpo da requisição — é sempre extraído do token de quem está logado, para impedir que alguém crie ou edite dados em nome de outro usuário.
+🛡️ RN-05- O usuario_id de um Simulado nunca vem do corpo da requisição — é sempre extraído do token de quem está logado, para impedir que alguém crie ou edite dados em nome de outro usuário. **Implementada**
 
-🗑️ RN-06- Exclusão de conta é soft delete: o campo ativo passa de true para false. O login deve checar ativo = true além de e-mail e senha — uma conta inativa não consegue logar, mesmo com credenciais corretas.
+🗑️ RN-06- Exclusão de conta é soft delete: o campo ativo passa de true para false. O login deve checar ativo = true além de e-mail e senha — uma conta inativa não consegue logar, mesmo com credenciais corretas. **Implementada**
 
 **Simulado** 📝
 
@@ -37,8 +37,11 @@ Regras de Negócio 📋
 🔍 RN-14- A listagem de simulados aceita busca por identificacao e, opcionalmente, filtro por período de data_aplicacao.
 
 📊 RN-15- A listagem de Questões de um simulado aceita busca ou ordenação por numero_questao.
+
 💬 RN-16- Toda ação de criar, editar ou apagar retorna uma resposta clara — sucesso com o registro afetado, ou erro com mensagem compreensível — nunca um 500 genérico.
 
 ✔️ RN-17- Validação acontece nas duas pontas: no formulário antes de enviar, e na API antes de gravar, sem confiar apenas na validação da tela.
 
 📌 RN-18- Toda listagem (GET) filtra por padrão apenas registros com ativo = true — um registro "excluído" não aparece mais nas telas, mesmo continuando no banco. **Implementada**
+
+🧮 RN-20- O sistema deve apresentar a quantidade de acertos por disciplina para cada aluno
