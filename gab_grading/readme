@@ -1,3 +1,5 @@
+<div style="text-align: justify;">
+
 # GabGrading: Sistema de Correção de Simulados
 
 ## 🚀 Visão Geral do Projeto
@@ -31,6 +33,7 @@ O sistema conta com autenticação completa, controle de posse dos dados por usu
 
 *   **Numeração Automática:** `numero_questao` é atribuído automaticamente pelo sistema em sequência crescente dentro do simulado.
 *   **Alternativa Correta:** `alternativa_correta` é um enum fechado (A, B, C, D, E), nunca texto livre.
+*   **Componente Curricular:** O campo 'componente_curricular' é obrigatório para identificação da disciplina
 *   **Conteúdo Opcional:** O campo `conteudo` é opcional para a descrição da questão.
 *   **Posse de Questão:** Toda `Questão` precisa apontar para um `simulado_id` que exista e pertença ao usuário logado.
 *   **Visibilidade Herdada:** A visibilidade de uma `Questão` é herdada do `Simulado` ao qual ela pertence; se o `Simulado` estiver inativo, suas `Questões` não são retornadas.
@@ -72,13 +75,14 @@ O sistema conta com autenticação completa, controle de posse dos dados por usu
 
 ### ❓ Questão
 
-| Atributo              | Tipo                       | Restrições                               |
-| :-------------------- | :------------------------- | :--------------------------------------- |
-| `id`                  | Serial                     | Chave primária, NOT NULL                 |
-| `numero_questao`      | Integer                    | NOT NULL, gerado automaticamente         |
-| `alternativa_correta` | Enum (A, B, C, D, E)       | NOT NULL, conjunto fechado               |
-| `conteudo`            | Text                       | Opcional                                 |
-| `simulado_id`         | Integer                    | Chave estrangeira (`Simulado`), NOT NULL |
+| Atributo               | Tipo                       | Restrições                               |
+| :--------------------- | :------------------------- | :--------------------------------------- |
+| `id`                   | Serial                     | Chave primária, NOT NULL                 |
+| `numero_questao`       | Integer                    | NOT NULL, gerado automaticamente         |
+| `alternativa_correta`  | Enum (A, B, C, D, E)       | NOT NULL, conjunto fechado               |
+| `conteudo`             | Text                       | Opcional                                 |
+| `componente_curricular'| Enum                       | NOT NULL, conjunto fechado               |
+| `simulado_id`          | Integer                    | Chave estrangeira (`Simulado`), NOT NULL |
 
 ---
 
@@ -133,9 +137,40 @@ O que ficou mais complicado foi a construção dos objetos. No exemplo da biblio
 
 ---
 
-## 🚀 Como Rodar o Projeto (Em Breve)
+## 🚀 Como Rodar o Projeto
 
-Instruções detalhadas para configurar o ambiente de desenvolvimento, instalar dependências e iniciar o servidor serão adicionadas aqui nos próximos encontros, conforme o ambiente for sendo configurado em Programação Web III.
+Para configurar e iniciar a API do GabGrading, siga os passos abaixo:
+
+1.  **Instalar as dependências:**
+    Certifique-se de ter o Poetry instalado. Na raiz do projeto, execute:
+    ```bash
+    poetry install
+    ```
+
+2.  **Configurar as variáveis de ambiente:**
+    Crie um arquivo chamado `.env` na raiz do projeto (ao lado do `pyproject.toml`). Este arquivo **não** deve ser enviado para o Git, pois contém informações sensíveis. Preencha-o com as seguintes variáveis, adaptando os valores conforme necessário:
+    ```
+    DATABASE_URL=sqlite:///./gabgrading.db
+    SECRET_KEY=sua_chave_secreta_aqui
+    ```
+    *   Para `DATABASE_URL`, você pode usar o valor padrão para SQLite ou configurar para PostgreSQL se preferir.
+    *   Para `SECRET_KEY`, gere uma chave aleatória e forte.
+
+3.  **Aplicar as migrações do banco de dados:**
+    O Alembic gerencia o esquema do banco. Execute o comando para criar as tabelas `usuarios`, `simulados` e `questoes`:
+    ```bash
+    poetry run alembic upgrade head
+    ```
+    Este comando criará o arquivo do banco de dados (se for SQLite) e todas as tabelas necessárias.
+
+4.  **Iniciar o servidor da API:**
+    ```bash
+    poetry run uvicorn app.main:app --reload
+    ```
+    A API estará disponível em `http://127.0.0.1:8000`.
+
+5.  **Acessar a documentação interativa:**
+    Abra seu navegador e vá para `http://127.0.0.1:8000/docs` para explorar os endpoints da API e realizar testes.
 
 ---
 
@@ -148,3 +183,6 @@ O histórico de commits no Git é parte fundamental da avaliação. Serão valor
 ## 🖼️ Protótipo Frontend
 
 Uma pasta `prototipo/` conterá os prints das telas essenciais do frontend, servindo como referência visual para o desenvolvimento do backend.
+
+
+</div>

@@ -18,13 +18,13 @@ Regras de Negócio 📋
 
 ⚠️ RN-07- identificacao e data_aplicacao são obrigatórios e não podem chegar vazios, tanto no formulário quanto na validação da API.
 
-👤🔒 RN-08- Um usuário só pode listar, ver, editar ou apagar os próprios simulados; tentativa de acessar um simulado de outro usuário retorna 403 Forbidden. 
+👤🔒 RN-08- Um usuário só pode listar, ver, editar ou apagar os próprios simulados; tentativa de acessar um simulado de outro usuário retorna 404 Forbidden. 
 
 🗂️ RN-09- Exclusão de Simulado também é soft delete: o campo ativo passa para false, e o registro nunca é removido de fato do banco — o que evita erro de integridade com as Questões já vinculadas a ele e preserva o histórico. **Implementada**
 
 **Questão** ❓
 
-✅ RN-10- numero_questao e alternativa_correta são obrigatórios; alternativa_correta é um enum fechado (A a E), nunca texto livre.
+✅ RN-10- numero_questao e alternativa_correta e componete_curricular são obrigatórios; alternativa_correta é um enum fechado (A a E) assim como componente_curricular, nunca texto livre.
 
 🔗 RN-11- Toda Questão precisa apontar para um simulado_id que exista e pertença ao usuário logado — mesma lógica de posse do Simulado.
 
@@ -44,4 +44,4 @@ Regras de Negócio 📋
 
 📌 RN-18- Toda listagem (GET) filtra por padrão apenas registros com ativo = true — um registro "excluído" não aparece mais nas telas, mesmo continuando no banco. **Implementada**
 
-🧮 RN-20- O sistema deve apresentar a quantidade de acertos por disciplina para cada aluno
+🧮 RN-20- O sistema deve apresentar a quantidade de acertos por componente curricular para cada aluno
