@@ -67,6 +67,17 @@ class DivisaoPorListaExplicita(DivisaoDeArea):
         return self.mapa[numero_questao]
 
 
+# inclusão de nova divisão sem mexer no service.py
+class DivisaoUnica(DivisaoDeArea):
+    """Quando o simulado inteiro pertence a uma unica area, sem sub-divisao."""
+
+    def __init__(self, nome_area):
+        self.nome_area = nome_area
+
+    def area_da_questao(self, numero_questao):
+        return self.nome_area
+
+
 # O unico lugar do sistema que sabe quais tipos de divisao existem.
 # Aqui o dicionario guarda as CLASSES, nao os objetos prontos: cada divisao
 # precisa dos dados daquele simulado (as faixas ou o mapa) para nascer, e
@@ -74,6 +85,7 @@ class DivisaoPorListaExplicita(DivisaoDeArea):
 DIVISOES = {
     "faixa": DivisaoPorFaixa,
     "lista_explicita": DivisaoPorListaExplicita,
+    "unica": DivisaoUnica,
 }
 
 

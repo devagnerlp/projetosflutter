@@ -114,9 +114,20 @@ Este projeto será desenvolvido utilizando as seguintes tecnologias:
 
 Este projeto será acompanhado por um "Diário de Decisões", um registro das escolhas arquiteturais e de design tomadas ao longo do desenvolvimento. Ele documentará o problema enfrentado, as alternativas consideradas, a decisão final e suas consequências, servindo como base para a defesa da arquitetura no final da disciplina.
 
+
 🖊️ *Diário de decisões — Encontro 5 (Repository)*
 Como já estava usando SQLAlchemy, verifiquei que parte do padrão Repository já vem embutido com a Session, então pensei em não criar essa camada separada. Mas decidi manter mesmo assim, porque duas das minhas regras de negócio não são só "buscar e salvar": a RN09 diz que excluir um simulado é soft delete (só marca ativo = False, nunca apaga de verdade) e a RN18 diz que toda listagem deve mostrar só os ativos por padrão. Se eu deixasse isso solto no service.py, a regra de negócio ficaria misturada com o jeito de mexer no banco (o .filter() e o .commit() do SQLAlchemy). Por isso criei o repository.py com métodos de nome de negócio (listar, buscar, criar, atualizar, desativar), que escondem esse "como" e devolvem sempre objetos Simulado, nunca tuplas ou dicionários crus.
 Para confirmar que a separação funcionou, abri o service.py e procurei por Session e .query. Não achei nenhum: ele só recebe o db e repassa para o repositório, sem saber o que fazer com ele. A diferença para o exemplo da aula é que não tenho um dependencias.py separado; quem escolhe e entrega a conexão é o próprio Depends(get_db) do FastAPI. No meu caso concluo que o Repository valeu a pena, não por causa de uma futura troca de banco, mas porque ele já esconde o soft delete e o filtro padrão. Caso meu projeto tivessse apenas um CRUD simples, sem essas duas regras, talvez eu teria decidido não criar essa camada.
+
+
+🖊️ *Diário de decisões — Encontro 7 (Strategy)*
+**Antes:** Não hávia escada de If's
+A regra de agrupar por intervalo e por disciplina utilizada para contar acertos por disciplina nasceu já como Strategy porque a mistura de blocos de questões com faixas contínuas (Ex: Matemática de 1 a 10, Fisica 11 a 20) e blocos com disciplinas embaralhadas dentro de uma faixa (Ciências Humanas (questões 1 a 45): Questão 1: Geografia, Questão 2: Sociologia, ..., Questão 9: Geografia) foi definida a partir do conhecimento do método Strategy.
+
+"O que ficou mais fácil foi acrescentar um terceiro jeito de dividir área (DivisaoUnica, para simulados de uma área só) sem tocar em nada além do divisao_area.py (demonstrando no git diff --stat). Isso deixou claro o valor prático do padrão: o service.py nunca precisa saber quantos tipos de divisão existem, só que existe UM tipo que responde à pergunta certa.
+
+O que ficou mais complicado foi a construção dos objetos. No exemplo da biblioteca, o dicionário guarda as políticas já prontas, porque nenhuma delas precisa de dado nenhum para nascer. No meu caso, DivisaoPorFaixa e DivisaoPorListaExplicita dependem dos dados daquele simulado específico (as faixas, ou o mapa), então o dicionário teve que guardar as classes, não os objetos, e uma função (divisao_para) monta o objeto certo na hora, com os dados certos. O que aproximou do padrão Factory Method, mas decisão de QUAL classe usar continua sendo Strategy, porém a MONTAGEM do objeto já não é tão simples quanto no exemplo da aula que usava dicionário."
+
 
 
 
