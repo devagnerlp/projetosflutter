@@ -132,7 +132,9 @@ A regra de agrupar por intervalo e por disciplina utilizada para contar acertos 
 
 O que ficou mais complicado foi a construção dos objetos. No exemplo da biblioteca, o dicionário guarda as políticas já prontas, porque nenhuma delas precisa de dado nenhum para nascer. No meu caso, DivisaoPorFaixa e DivisaoPorListaExplicita dependem dos dados daquele simulado específico (as faixas, ou o mapa), então o dicionário teve que guardar as classes, não os objetos, e uma função (divisao_para) monta o objeto certo na hora, com os dados certos. O que aproximou do padrão Factory Method, mas decisão de QUAL classe usar continua sendo Strategy, porém a MONTAGEM do objeto já não é tão simples quanto no exemplo da aula que usava dicionário."
 
+🖊️ *Diário de decisões — Encontro 8 (Factory Method)*
 
+Como no padrão Strategy teve uma aproximação com o Factory Method, é possível fazer a transformação completa  tirando do divisao_para a responsabilidade de escolher e montar diretamente as estratégias e criar uma fábrica específica para isso. Essa fábrica receberia os dados do simulado (o tipo de divisão, as faixas ou o mapa) e teria um método que construiria a estratégia correspondente, devolvendo um objeto pronto para uso. Assim, o código que usa a divisão não precisaria conhecer as classes concretas nem saber quais dados cada uma exige: apenas pediria à fábrica a estratégia adequada. Dessa forma, O Strategy continuaria definindo as diferentes formas de dividir a área, enquanto o Factory Method centralizaria a criação dos objetos e poderia ser estendido para novos tipos de divisão sem espalhar essa lógica pelo sistema.
 
 
 ---
