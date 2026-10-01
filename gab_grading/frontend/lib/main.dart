@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'telas/login_screen.dart';
+import 'telas/cadastro_screen.dart';
 
 void main() {
   runApp(const GabGradingApp());
@@ -15,6 +16,7 @@ class GabGradingApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorSchemeSeed: Colors.indigo),
       home: const LoginScreen(),
+      //home: const CadastroScreen(),
     );
   }
 }
