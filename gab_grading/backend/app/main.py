@@ -9,12 +9,22 @@ from .simulados import controller as simulados_controller
 from .simulados.erros import ErroDeSimulado, SimuladoNaoEncontrado
 from .usuarios import controller as usuarios_controller
 from .usuarios.erros import CredenciaisInvalidas, ErroDeUsuario
+from fastapi.middleware.cors import CORSMiddleware
 
 # So' para a aula: cria as tabelas ao subir. Em projeto de verdade quem
 # faz isso e' uma ferramenta de migracao (Alembic), assunto de outro dia.
 #Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="API do GabGrading", version="0.3.0")
+# O app Flutter roda no navegador, noutro endereco (a porta muda a cada
+# `flutter run`). O navegador so' deixa uma pagina falar com outro endereco
+# se a API disser que deixa: e' o CORS. Aqui: qualquer porta desta maquina.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # é um app por rota nova (entidade nova) que criamos, e o controller é quem sabe quais rotas existem. O app não sabe nada de simulados, só sabe que existe um controller que sabe.
 app.include_router(simulados_controller.router) #realiza guarda de rotas do controller de simulados - Padrão composite
 app.include_router(questoes_controller.router)
