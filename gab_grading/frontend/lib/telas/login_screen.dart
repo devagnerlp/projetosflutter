@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Biblioteca')),
+      appBar: AppBar(title: const Text('GabGrading')),
       body: Center(
         child: SingleChildScrollView(
           child: Container(
