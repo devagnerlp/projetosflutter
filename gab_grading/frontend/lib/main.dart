@@ -1,24 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'repositories/usuario_repository.dart';
 import 'routes.dart';
 import 'telas/cadastro_screen.dart';
 import 'telas/inicio_screen.dart';
 import 'telas/login_screen.dart';
+import 'telas/simulados_screen.dart';
+import 'telas/perfil_screen.dart';
 import 'services/sessao_service.dart';
 import 'widgets/rota_protegida.dart';
 
-// Aqui as camadas se montam, como o main.py monta a API no backend:
-// o repositório entra no service, e o service entra nas telas.
+// Aqui as camadas se montam, como o main.py monta a API no backend: o
+// repositório entra no service, e o service fica no topo do app, onde toda
+// tela o alcança, sem passar de construtor em construtor.
 void main() {
-  final sessao = SessaoService(UsuarioRepository());
-  runApp(GabGradingApp(sessao: sessao));
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => SessaoService(UsuarioRepository()),
+      child: const GabGradingApp(),
+    ),
+  );
 }
 
 class GabGradingApp extends StatelessWidget {
-  const GabGradingApp({super.key, required this.sessao});
-
-  final SessaoService sessao;
+  const GabGradingApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +34,11 @@ class GabGradingApp extends StatelessWidget {
       theme: ThemeData(colorSchemeSeed: Colors.indigo),
       initialRoute: AppRoutes.login,
       routes: {
-        AppRoutes.login: (context) => LoginScreen(sessao: sessao),
+        AppRoutes.login: (context) => const LoginScreen(),
         AppRoutes.cadastro: (context) => const CadastroScreen(),
-        AppRoutes.inicio: (context) => RotaProtegida(
-          sessao: sessao,
-          tela: InicioScreen(sessao: sessao),
-        ),
+        AppRoutes.inicio: (context) => const RotaProtegida(tela: InicioScreen()),
+        AppRoutes.simulados: (context) => const RotaProtegida(tela: SimuladosScreen()),
+        AppRoutes.perfil: (context) => const RotaProtegida(tela: PerfilScreen()),
       },
     );
   }
