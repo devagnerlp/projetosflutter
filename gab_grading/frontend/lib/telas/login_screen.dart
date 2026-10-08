@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../services/sessao_service.dart';
-//import 'cadastro_screen.dart';
-//import 'inicio_screen.dart';
 import '../routes.dart';
+import '../services/sessao_service.dart';
 
 // A camada de apresentação: recebe o clique, pede ao service e mostra a resposta.
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.sessao});
-
-  final SessaoService sessao;
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -27,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
       erro = null;
     });
     try {
-      await widget.sessao.entrar(email.text, senha.text);
+      await context.read<SessaoService>().entrar(email.text, senha.text);
     } on ErroDeLogin catch (e) {
       setState(() {
         carregando = false;
@@ -49,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('GabGrading')),
+      appBar: AppBar(title: const Text('Biblioteca')),
       body: Center(
         child: SingleChildScrollView(
           child: Container(
