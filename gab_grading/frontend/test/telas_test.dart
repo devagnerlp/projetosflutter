@@ -11,7 +11,9 @@ import 'package:frontend/repositories/usuario_repository.dart';
 import 'package:frontend/routes.dart';
 import 'package:frontend/telas/cadastro_screen.dart';
 import 'package:frontend/telas/inicio_screen.dart';
+import 'package:frontend/telas/simulados_screen.dart';
 import 'package:frontend/telas/login_screen.dart';
+import 'package:frontend/telas/perfil_screen.dart';
 import 'package:frontend/services/sessao_service.dart';
 
 // Uma API de mentira: responde como a de verdade, sem precisar do uvicorn.
@@ -53,6 +55,11 @@ Future<void> preencherEEntrar(WidgetTester tester, String senha) async {
   await tester.enterText(find.byType(TextField).at(0), 'ana@biblioteca.com');
   await tester.enterText(find.byType(TextField).at(1), senha);
   await tester.tap(find.widgetWithText(ElevatedButton, 'Entrar'));
+  await tester.pumpAndSettle();
+}
+
+Future<void> abrirOMenu(WidgetTester tester) async {
+  await tester.tap(find.byIcon(Icons.menu));
   await tester.pumpAndSettle();
 }
 
@@ -108,6 +115,41 @@ void main() {
 
     expect(find.byType(InicioScreen), findsNothing);
     expect(find.byType(LoginScreen), findsOneWidget);
+  });
+
+  testWidgets('o menu mostra o nome sem receber nada pelo construtor', (tester) async {
+    await tester.pumpWidget(appDeMentira(sessaoDeMentira()));
+    await preencherEEntrar(tester, 'segredo123');
+
+    await abrirOMenu(tester);
+    final menu = find.byType(Drawer);
+    expect(find.descendant(of: menu, matching: find.text('Ana')), findsOneWidget);
+    expect(find.descendant(of: menu, matching: find.text('ana@biblioteca.com')), findsOneWidget);
+
+    await tester.tap(find.descendant(of: menu, matching: find.text('Perfil')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PerfilScreen), findsOneWidget);
+    await abrirOMenu(tester);
+    expect(find.descendant(of: find.byType(Drawer), matching: find.text('Ana')), findsOneWidget);
+  });
+
+  testWidgets('sair volta ao login, limpa a pilha e apaga a sessão', (tester) async {
+    final sessao = sessaoDeMentira();
+    await tester.pumpWidget(appDeMentira(sessao));
+    await preencherEEntrar(tester, 'segredo123');
+    await tester.tap(find.text('Ver os simulados'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SimuladosScreen), findsOneWidget);
+
+    await abrirOMenu(tester);
+    await tester.tap(find.text('Sair'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(find.byType(SimuladosScreen), findsNothing);
+    expect(Navigator.of(tester.element(find.byType(LoginScreen))).canPop(), isFalse);
+    expect(sessao.logado, isFalse);
   });
 
   testWidgets('o watch redesenha a tela quando o service avisa', (tester) async {

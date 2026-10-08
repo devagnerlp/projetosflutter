@@ -6,6 +6,8 @@ import 'routes.dart';
 import 'telas/cadastro_screen.dart';
 import 'telas/inicio_screen.dart';
 import 'telas/login_screen.dart';
+import 'telas/simulados_screen.dart';
+import 'telas/perfil_screen.dart';
 import 'services/sessao_service.dart';
 import 'widgets/rota_protegida.dart';
 
@@ -35,6 +37,8 @@ class GabGradingApp extends StatelessWidget {
         AppRoutes.login: (context) => const LoginScreen(),
         AppRoutes.cadastro: (context) => const CadastroScreen(),
         AppRoutes.inicio: (context) => const RotaProtegida(tela: InicioScreen()),
+        AppRoutes.simulados: (context) => const RotaProtegida(tela: SimuladosScreen()),
+        AppRoutes.perfil: (context) => const RotaProtegida(tela: PerfilScreen()),
       },
     );
   }
