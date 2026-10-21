@@ -47,7 +47,7 @@ class UsuarioRepository {
       body: jsonEncode({'nome': nome, 'email': email, 'senha': senha}),
     );
     if (resposta.statusCode != 201) {
-      throw RecusaDaApi(resposta.statusCode, _frase(resposta.body));
+      throw RecusaDaApi(resposta.statusCode, fraseDaApi(resposta.body));
     }
     return Usuario.fromJson(jsonDecode(resposta.body));
   }
@@ -59,19 +59,20 @@ class UsuarioRepository {
       headers: {'Authorization': 'Bearer $token'},
     );
     if (resposta.statusCode != 200) {
-      throw RecusaDaApi(resposta.statusCode, _frase(resposta.body));
+      throw RecusaDaApi(resposta.statusCode, fraseDaApi(resposta.body));
     }
     return Usuario.fromJson(jsonDecode(resposta.body));
   }
+}
 
-  // Tira do JSON de erro a frase que vale mostrar. O "detail" é um texto
-  // (no 409) ou uma lista, com um item por campo errado (no 422).
-  String _frase(String corpo) {
-    final detalhe = jsonDecode(corpo)['detail'];
-    if (detalhe is String) {
-      return detalhe;
-    }
-    final primeiro = detalhe[0];
-    return '${primeiro['loc'].last}: ${primeiro['msg']}';
+// Tira do JSON de erro a frase que vale mostrar. O "detail" é um texto
+// (no 409) ou uma lista, com um item por campo errado (no 422). Fica fora da
+// classe porque os repositórios todos a usam.
+String fraseDaApi(String corpo) {
+  final detalhe = jsonDecode(corpo)['detail'];
+  if (detalhe is String) {
+    return detalhe;
   }
+  final primeiro = detalhe[0];
+  return '${primeiro['loc'].last}: ${primeiro['msg']}';
 }

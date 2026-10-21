@@ -26,7 +26,7 @@ O sistema conta com autenticação completa, controle de posse dos dados por usu
 ### 📝 Gerenciamento de Simulados (CRUD)
 
 *   **Criação e Edição:** `identificacao` e `data_aplicacao` são campos obrigatórios e não podem ser vazios.
-*   **Controle de Posse:** Um usuário só pode listar, ver, editar ou apagar os próprios simulados; tentativas de acesso a simulados de outros usuários resultam em `403 Forbidden`.
+*   **Controle de Posse:** Um usuário só pode listar, ver, editar ou apagar os próprios simulados; tentativas de acesso a simulados de outros usuários resultam em `404 Not Found`: o simulado de outra pessoa se comporta como se não existisse.
 *   **Soft Delete de Simulado:** A exclusão de `Simulado` também é um `soft delete` (`ativo` passa para `false`), preservando o histórico e a integridade com `Questões` vinculadas.
 
 ### ❓ Gerenciamento de Questões
@@ -193,6 +193,10 @@ Para configurar e iniciar a API do GabGrading, siga os passos abaixo:
 
 O cadastro chama `POST /usuarios/` pelas mesmas camadas do login e já entra com a conta nova. Quando a API recusa (e-mail repetido, campo inválido), a frase aparece na tela.
 O token fica no aparelho (`shared_preferences`, que no navegador é o `localStorage`), num repositório próprio, o `TokenRepository`. O `main` o restaura antes de abrir o app: se a API ainda o aceita, o F5 não derruba a sessão. O Sair apaga o token.
+
+A tela de simulados chama `GET /simulados/` pelas camadas do app (tela, `SimuladoService`, `SimuladoRepository`), com o token no cabeçalho, e mostra só os simulados de quem está logado. Ela tem quatro estados: carregando, erro (com Tentar de novo), lista vazia e a lista.
+Tocar num simulado abre o detalhe pela rota `/simulado`, com o id nos `arguments`: o detalhe busca o simulado na API (`GET /simulados/{id}`), para mostrar o dado de agora. Sem o id (um F5 no detalhe apaga os `arguments`), a tela mostra a lista.
+Para isso o backend passou a filtrar por dono (RN-08): a listagem devolve só os simulados do usuário do token, e ver, editar ou apagar o de outra pessoa responde 404.
 
 ---
 
