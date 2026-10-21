@@ -4,8 +4,10 @@ from .models import Simulado
 
 # A UNICA parte do sistema que sabe que existe um banco. Não pode ter 'db.query` fora daqui, senão a camada vazou.
 
-def listar(db: Session, apenas_ativos: bool = True):
+def listar(db: Session, apenas_ativos: bool = True, usuario_id: int | None = None):
     consulta = db.query(Simulado)
+    if usuario_id is not None:
+        consulta = consulta.filter(Simulado.usuario_id == usuario_id)
     if apenas_ativos:
         consulta = consulta.filter(Simulado.ativo == True)  # noqa: E712 (pela redução de linhas, o linter reclama do '== True')
     return consulta.all()
