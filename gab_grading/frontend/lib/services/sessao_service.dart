@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/usuario.dart';
+import '../repositories/token_repository.dart';
 import '../repositories/usuario_repository.dart';
 
 // Uma recusa do app, com a frase para a tela mostrar: como os erros.py do backend.
@@ -22,9 +23,11 @@ class ErroDeCadastro implements Exception {
 // É um ChangeNotifier: quando a sessão muda, ele avisa (notifyListeners) quem
 // estiver de olho.
 class SessaoService extends ChangeNotifier {
-  SessaoService(this.repositorio);
+  SessaoService(this.repositorio, {TokenRepository? tokens})
+      : tokens = tokens ?? TokenRepository();
 
   final UsuarioRepository repositorio;
+  final TokenRepository tokens;
   String? token;
   Usuario? usuario;
 
@@ -49,6 +52,7 @@ class SessaoService extends ChangeNotifier {
     }
     token = recebido;
     usuario = quem;
+    await tokens.salvar(recebido);
     notifyListeners();
   }
 
@@ -72,7 +76,28 @@ class SessaoService extends ChangeNotifier {
     }
   }
 
-  void sair() {
+  // Roda uma vez, antes de a primeira tela aparecer: se há um token guardado
+  // no aparelho e a API ainda o aceita, a sessão volta sozinha.
+  Future<void> restaurar() async {
+    final guardado = await tokens.ler();
+    if (guardado == null) {
+      return;
+    }
+    try {
+      usuario = await repositorio.quemSouEu(guardado);
+      token = guardado;
+      notifyListeners();
+    } on RecusaDaApi {
+      // A API respondeu e disse não: o token venceu, ou não vale mais.
+      await tokens.apagar();
+    } catch (e) {
+      // A API nem respondeu (uvicorn parado): o token fica guardado, e o app
+      // abre no login. Quando a API voltar, a sessão volta no próximo F5.
+    }
+  }
+
+  Future<void> sair() async {
+    await tokens.apagar();
     token = null;
     usuario = null;
     notifyListeners();
