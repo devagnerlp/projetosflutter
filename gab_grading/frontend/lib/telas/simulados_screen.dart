@@ -1,25 +1,99 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../models/simulado.dart';
+import '../routes.dart';
+import '../services/simulado_service.dart';
 import '../widgets/app_drawer.dart';
 
-// Um lugar reservado: a listagem dos Simulados chega adiante.
-class SimuladosScreen extends StatelessWidget {
+// A lista dos simulados de quem está logado, vinda da API. A tela tem quatro
+// estados, um de cada vez: carregando, erro, lista vazia e a lista.
+class SimuladosScreen extends StatefulWidget {
   const SimuladosScreen({super.key});
+
+  @override
+  State<SimuladosScreen> createState() => _SimuladosScreenState();
+}
+
+class _SimuladosScreenState extends State<SimuladosScreen> {
+  // O pedido à API: nasce UMA vez, quando a tela nasce, e só é refeito no
+  // Tentar de novo. Criado dentro do build, sairia de novo a cada redesenho.
+  late Future<List<Simulado>> simulados;
+
+  @override
+  void initState() {
+    super.initState();
+    simulados = context.read<SimuladoService>().listar();
+  }
+
+  void tentarDeNovo() {
+    setState(() {
+      simulados = context.read<SimuladoService>().listar();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Simulados')),
       drawer: const AppDrawer(),
-      body: const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.menu_book, size: 56),
-            SizedBox(height: 16),
-            Text('A listagem dos simulados chega adiante.'),
-          ],
-        ),
+      body: FutureBuilder<List<Simulado>>(
+        future: simulados,
+        builder: (context, snapshot) {
+          // 1. Carregando: a resposta ainda não chegou.
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          // 2. Erro: a API recusou, ou nem respondeu.
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.cloud_off, size: 56),
+                  const SizedBox(height: 16),
+                  const Text('Não consegui carregar os simulados'),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${snapshot.error}',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: tentarDeNovo,
+                    child: const Text('Tentar de novo'),
+                  ),
+                ],
+              ),
+            );
+          }
+          final lista = snapshot.data!;
+          // 3. Vazia: o pedido deu certo, mas não há simulado nenhum.
+          if (lista.isEmpty) {
+            return const Center(child: Text('Nenhum simulado ainda.'));
+          }
+          // 4. A lista: um ListTile por simulado. O toque abre o detalhe e leva
+          // só o id: a tela do simulado busca o simulado de agora na API.
+          return ListView.builder(
+            itemCount: lista.length,
+            itemBuilder: (context, i) {
+              final simulado = lista[i];
+              return ListTile(
+                leading: const Icon(Icons.menu_book),
+                title: Text(simulado.identificacao),
+                subtitle: Text(simulado.dataFormatada),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.simulado,
+                    arguments: simulado.id,
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }

@@ -14,8 +14,9 @@ router = APIRouter(prefix="/simulados", tags=["Simulados"],
 # HTTP no tradutor registrado no main.py, uma vez para todas as rotas.
 
 @router.get("/", response_model=list[SimuladoPublico])
-def listar(db: Session = Depends(get_db)):
-    return service.listar(db)
+def listar(db: Session = Depends(get_db),
+           usuario: Usuario = Depends(get_current_user)):
+    return service.listar(db, usuario.id)
 
 @router.post("/", response_model=SimuladoPublico, status_code=201)
 def criar(dados: SimuladoCriar, db: Session = Depends(get_db),
@@ -24,22 +25,25 @@ def criar(dados: SimuladoCriar, db: Session = Depends(get_db),
 # RN-05: o usuario_id nunca vem do corpo -- vem de quem esta logado.
 
 @router.get("/{simulado_id}", response_model=SimuladoPublico)
-def buscar(simulado_id: int, db: Session = Depends(get_db)):
-    return service.buscar(db, simulado_id)
+def buscar(simulado_id: int, db: Session = Depends(get_db),
+           usuario: Usuario = Depends(get_current_user)):
+    return service.buscar(db, simulado_id, usuario.id)
 
 @router.patch("/{simulado_id}", response_model=SimuladoPublico)
 def atualizar(
     simulado_id: int,
     dados: SimuladoAtualizar,
     db: Session = Depends(get_db),
+    usuario: Usuario = Depends(get_current_user),
 ):
     return service.atualizar(
-        db, simulado_id, dados.model_dump(exclude_unset=True)
+        db, simulado_id, dados.model_dump(exclude_unset=True), usuario.id
     )
 
 @router.delete("/{simulado_id}", status_code=204)
-def desativar(simulado_id: int, db: Session = Depends(get_db)):
-    service.desativar(db, simulado_id)
+def desativar(simulado_id: int, db: Session = Depends(get_db),
+              usuario: Usuario = Depends(get_current_user)):
+    service.desativar(db, simulado_id, usuario.id)
 
 
 
