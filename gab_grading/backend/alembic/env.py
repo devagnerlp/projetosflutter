@@ -17,6 +17,9 @@ from app.database import Base, URL
 from app.usuarios import models as usuarios_models  # noqa: F401
 from app.simulados import models as simulados_models  # noqa: F401
 from app.questoes import models as questoes_models  # noqa: F401
+from app.turma import models as turma_models  # noqa: F401
+from app.alunos import models as alunos_models  # noqa: F401
+from app.respostas import models as respostas_models  # noqa: F401
 
 config = context.config
 
