@@ -14,6 +14,8 @@ class ErroDeSimulados implements Exception {
   String toString() => mensagem;
 }
 
+const _semApi = 'Não consegui falar com a API. O uvicorn está rodando?';
+
 // As regras dos simulados. Não guarda estado (não é um ChangeNotifier): quem
 // lembra se está carregando, se deu erro ou qual é a lista é a própria tela.
 // O service pega o token na sessão, pede ao repositório e traduz a recusa.
@@ -33,7 +35,7 @@ class SimuladoService {
       // Uma falha de fora, como a rede: a API nem respondeu (o uvicorn parado).
       // Um erro do próprio código não é Exception: passa direto, e a tela o
       // mostra inteiro.
-      throw ErroDeSimulados('Não consegui falar com a API. O uvicorn está rodando?');
+      throw ErroDeSimulados(_semApi);
     }
   }
 
@@ -44,7 +46,39 @@ class SimuladoService {
     } on RecusaDaApi catch (e) {
       throw ErroDeSimulados(e.mensagem);
     } on Exception {
-      throw ErroDeSimulados('Não consegui falar com a API. O uvicorn está rodando?');
+      throw ErroDeSimulados(_semApi);
+    }
+  }
+
+  // Criar, editar e excluir: o mesmo molde do listar. O token vem da sessão,
+  // e a recusa da API (422, 404) vira a frase que a tela mostra.
+  Future<Simulado> criar(String identificacao, DateTime data) async {
+    try {
+      return await repositorio.criar(sessao.token!, identificacao, data);
+    } on RecusaDaApi catch (e) {
+      throw ErroDeSimulados(e.mensagem);
+    } on Exception {
+      throw ErroDeSimulados(_semApi);
+    }
+  }
+
+  Future<Simulado> atualizar(int id, String identificacao, DateTime data) async {
+    try {
+      return await repositorio.atualizar(sessao.token!, id, identificacao, data);
+    } on RecusaDaApi catch (e) {
+      throw ErroDeSimulados(e.mensagem);
+    } on Exception {
+      throw ErroDeSimulados(_semApi);
+    }
+  }
+
+  Future<void> excluir(int id) async {
+    try {
+      await repositorio.excluir(sessao.token!, id);
+    } on RecusaDaApi catch (e) {
+      throw ErroDeSimulados(e.mensagem);
+    } on Exception {
+      throw ErroDeSimulados(_semApi);
     }
   }
 }

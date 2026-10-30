@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'models/simulado.dart';
 import 'repositories/simulado_repository.dart';
 import 'repositories/token_repository.dart';
 import 'repositories/usuario_repository.dart';
 import 'routes.dart';
 import 'telas/cadastro_screen.dart';
+import 'telas/formulario_screen.dart';
 import 'telas/inicio_screen.dart';
 import 'telas/login_screen.dart';
 import 'telas/perfil_screen.dart';
@@ -56,6 +58,12 @@ class GabGradingApp extends StatelessWidget {
         // O detalhe: a rota entrega à tela o id que veio nos arguments.
         AppRoutes.simulado: (context) => RotaProtegida(
           tela: SimuladoScreen(id: ModalRoute.of(context)!.settings.arguments as int?),
+        ),
+        // O formulário: com um simulado nos arguments, edita; sem, cria.
+        AppRoutes.formulario: (context) => RotaProtegida(
+          tela: FormularioScreen(
+            simulado: ModalRoute.of(context)!.settings.arguments as Simulado?,
+          ),
         ),
         AppRoutes.perfil: (context) => const RotaProtegida(tela: PerfilScreen()),
       },

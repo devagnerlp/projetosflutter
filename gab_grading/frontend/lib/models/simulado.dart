@@ -26,9 +26,39 @@ class Simulado {
   }
 
   // A data como a pessoa lê: dd/mm/aaaa.
-  String get dataFormatada {
-    final dia = dataAplicacao.day.toString().padLeft(2, '0');
-    final mes = dataAplicacao.month.toString().padLeft(2, '0');
-    return '$dia/$mes/${dataAplicacao.year}';
+  String get dataFormatada => formatarData(dataAplicacao);
+}
+
+String _doisDigitos(int numero) => numero.toString().padLeft(2, '0');
+
+// A data como a pessoa lê e escreve: dd/mm/aaaa.
+String formatarData(DateTime data) {
+  return '${_doisDigitos(data.day)}/${_doisDigitos(data.month)}/${data.year}';
+}
+
+// A data como a API espera no JSON: aaaa-mm-dd.
+String dataParaApi(DateTime data) {
+  return '${data.year}-${_doisDigitos(data.month)}-${_doisDigitos(data.day)}';
+}
+
+// Lê o que a pessoa digitou (dd/mm/aaaa). Devolve null se não for uma data de
+// verdade: letras, partes faltando, ou um dia que não existe, como 31/02. O
+// DateTime "arruma" o 31/02 para março sozinho, por isso o dia, o mês e o ano
+// são conferidos de volta.
+DateTime? lerData(String texto) {
+  final partes = texto.trim().split('/');
+  if (partes.length != 3 || partes[2].length != 4) {
+    return null;
   }
+  final dia = int.tryParse(partes[0]);
+  final mes = int.tryParse(partes[1]);
+  final ano = int.tryParse(partes[2]);
+  if (dia == null || mes == null || ano == null) {
+    return null;
+  }
+  final data = DateTime(ano, mes, dia);
+  if (data.day != dia || data.month != mes || data.year != ano) {
+    return null;
+  }
+  return data;
 }
