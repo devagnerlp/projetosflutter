@@ -66,13 +66,15 @@ class UsuarioRepository {
 }
 
 // Tira do JSON de erro a frase que vale mostrar. O "detail" é um texto
-// (no 409) ou uma lista, com um item por campo errado (no 422). Fica fora da
-// classe porque os repositórios todos a usam.
+// (no 404, 409) ou uma lista, com um item por campo errado (no 422). Fica fora
+// da classe porque os repositórios todos a usam. O Pydantic põe "Value error, "
+// na frente das mensagens dos validadores da API: sai aqui.
 String fraseDaApi(String corpo) {
   final detalhe = jsonDecode(corpo)['detail'];
   if (detalhe is String) {
     return detalhe;
   }
   final primeiro = detalhe[0];
-  return '${primeiro['loc'].last}: ${primeiro['msg']}';
+  final mensagem = '${primeiro['msg']}'.replaceFirst('Value error, ', '');
+  return '${primeiro['loc'].last}: $mensagem';
 }

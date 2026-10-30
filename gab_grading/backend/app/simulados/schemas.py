@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class SimuladoCriar(BaseModel):
     identificacao: str = Field(min_length=3, description="Identificação única do simulado")
     data_aplicacao: date = Field(description="Data de aplicação do simulado")
-    usuario_id: int = Field(description="ID do usuário proprietário do simulado")
+    # usuario_id NÃO entra aqui (RN-05): o dono vem do token, no controller.
     ativo: bool = True
 
 class SimuladoPublico(BaseModel):

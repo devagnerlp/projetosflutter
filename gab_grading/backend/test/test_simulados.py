@@ -4,6 +4,7 @@ import pytest
 
 from app.simulados import repository, service
 from app.simulados.erros import SimuladoNaoEncontrado
+from app.simulados.schemas import SimuladoCriar
 from app.usuarios import service as usuarios_service
 
 
@@ -75,3 +76,11 @@ def test_atualizar_o_simulado_de_outra_pessoa_e_recusado(db):
         service.atualizar(db, simulado.id, {"identificacao": "Invadido"}, bia.id)
 
     assert repository.buscar(db, simulado.id).identificacao == "Simulado A"
+
+
+def test_o_corpo_do_cadastro_nao_pede_nem_guarda_o_dono():
+    # RN-05: o usuario_id vem do token, nunca do corpo da requisicao
+    corpo = SimuladoCriar(identificacao="Simulado A", data_aplicacao="2026-10-01", usuario_id=999)
+
+    assert "usuario_id" not in SimuladoCriar.model_fields
+    assert "usuario_id" not in corpo.model_dump()

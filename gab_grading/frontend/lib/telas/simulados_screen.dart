@@ -7,7 +7,8 @@ import '../services/simulado_service.dart';
 import '../widgets/app_drawer.dart';
 
 // A lista dos simulados de quem está logado, vinda da API. A tela tem quatro
-// estados, um de cada vez: carregando, erro, lista vazia e a lista.
+// estados, um de cada vez: carregando, erro, lista vazia e a lista. O + abre
+// o formulário de um simulado novo, e o toque, o detalhe (que edita e exclui).
 class SimuladosScreen extends StatefulWidget {
   const SimuladosScreen({super.key});
 
@@ -16,8 +17,8 @@ class SimuladosScreen extends StatefulWidget {
 }
 
 class _SimuladosScreenState extends State<SimuladosScreen> {
-  // O pedido à API: nasce UMA vez, quando a tela nasce, e só é refeito no
-  // Tentar de novo. Criado dentro do build, sairia de novo a cada redesenho.
+  // O pedido à API: nasce UMA vez, quando a tela nasce, e só é refeito pelo
+  // pedirDeNovo. Criado dentro do build, sairia de novo a cada redesenho.
   late Future<List<Simulado>> simulados;
 
   @override
@@ -26,7 +27,9 @@ class _SimuladosScreenState extends State<SimuladosScreen> {
     simulados = context.read<SimuladoService>().listar();
   }
 
-  void tentarDeNovo() {
+  // Pede a lista de novo: o Tentar de novo, e a volta de uma tela que mudou
+  // os simulados (fechou com true), fazem a mesma coisa.
+  void pedirDeNovo() {
     setState(() {
       simulados = context.read<SimuladoService>().listar();
     });
@@ -60,7 +63,7 @@ class _SimuladosScreenState extends State<SimuladosScreen> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: tentarDeNovo,
+                    onPressed: pedirDeNovo,
                     child: const Text('Tentar de novo'),
                   ),
                 ],
@@ -73,7 +76,9 @@ class _SimuladosScreenState extends State<SimuladosScreen> {
             return const Center(child: Text('Nenhum simulado ainda.'));
           }
           // 4. A lista: um ListTile por simulado. O toque abre o detalhe e leva
-          // só o id: a tela do simulado busca o simulado de agora na API.
+          // só o id: a tela do simulado busca o simulado de agora na API. O
+          // await espera o detalhe fechar: com true (editou ou excluiu), a
+          // lista pede de novo.
           return ListView.builder(
             itemCount: lista.length,
             itemBuilder: (context, i) {
@@ -83,17 +88,32 @@ class _SimuladosScreenState extends State<SimuladosScreen> {
                 title: Text(simulado.identificacao),
                 subtitle: Text(simulado.dataFormatada),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.pushNamed(
+                onTap: () async {
+                  final mudou = await Navigator.pushNamed(
                     context,
                     AppRoutes.simulado,
                     arguments: simulado.id,
                   );
+                  if (mudou == true) {
+                    pedirDeNovo();
+                  }
                 },
               );
             },
           );
         },
+      ),
+      // O + abre o formulário vazio. Ele fecha com true quando salvou: aí, a
+      // lista pede de novo, e o simulado novo aparece.
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Novo simulado',
+        onPressed: () async {
+          final salvou = await Navigator.pushNamed(context, AppRoutes.formulario);
+          if (salvou == true) {
+            pedirDeNovo();
+          }
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }

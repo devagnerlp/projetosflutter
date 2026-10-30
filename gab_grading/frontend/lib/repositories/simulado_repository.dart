@@ -39,4 +39,62 @@ class SimuladoRepository {
     }
     return Simulado.fromJson(jsonDecode(resposta.body));
   }
+
+  // POST /simulados/: o simulado novo vai em JSON no corpo, como no cadastro da
+  // conta, e o token no cabeçalho. O dono não vai no corpo: a API o tira do
+  // token (RN-05). A API responde 201 e o simulado criado.
+  Future<Simulado> criar(String token, String identificacao, DateTime data) async {
+    final resposta = await cliente.post(
+      Uri.parse('$enderecoDaApi/simulados/'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'identificacao': identificacao,
+        'data_aplicacao': dataParaApi(data),
+      }),
+    );
+    if (resposta.statusCode != 201) {
+      throw RecusaDaApi(resposta.statusCode, fraseDaApi(resposta.body));
+    }
+    return Simulado.fromJson(jsonDecode(resposta.body));
+  }
+
+  // PATCH /simulados/{id}: só o que o formulário edita, a identificação e a
+  // data. A situação (ativo) não vai: ela muda pelo excluir.
+  Future<Simulado> atualizar(
+    String token,
+    int id,
+    String identificacao,
+    DateTime data,
+  ) async {
+    final resposta = await cliente.patch(
+      Uri.parse('$enderecoDaApi/simulados/$id'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'identificacao': identificacao,
+        'data_aplicacao': dataParaApi(data),
+      }),
+    );
+    if (resposta.statusCode != 200) {
+      throw RecusaDaApi(resposta.statusCode, fraseDaApi(resposta.body));
+    }
+    return Simulado.fromJson(jsonDecode(resposta.body));
+  }
+
+  // DELETE /simulados/{id}: a API responde 204, sem corpo nenhum. No banco é um
+  // soft delete (ativo = false), mas para o app o simulado sumiu.
+  Future<void> excluir(String token, int id) async {
+    final resposta = await cliente.delete(
+      Uri.parse('$enderecoDaApi/simulados/$id'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (resposta.statusCode != 204) {
+      throw RecusaDaApi(resposta.statusCode, fraseDaApi(resposta.body));
+    }
+  }
 }

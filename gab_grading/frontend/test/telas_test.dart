@@ -15,6 +15,7 @@ import 'package:frontend/repositories/usuario_repository.dart';
 import 'package:frontend/routes.dart';
 import 'package:frontend/telas/cadastro_screen.dart';
 import 'package:frontend/telas/inicio_screen.dart';
+import 'package:frontend/telas/formulario_screen.dart';
 import 'package:frontend/telas/simulado_screen.dart';
 import 'package:frontend/telas/simulados_screen.dart';
 import 'package:frontend/telas/login_screen.dart';
@@ -120,6 +121,72 @@ http.Client apiDeSimulados(int status, Object corpo) {
   });
 }
 
+// A API de simulados com banco de mentira: a lista MUDA quando o app cria,
+// edita ou exclui, como a de verdade. Recusa o que a API recusaria (a
+// identificação de menos de 3 letras, 422) e responde 404 a um id que não está
+// no acervo. O corpo do último pedido que mudou algo fica em ultimoCorpo.
+Map<String, dynamic>? ultimoCorpo;
+
+http.Client acervoDeMentira() {
+  final acervo = <Map<String, dynamic>>[for (final s in doisSimulados) {...s}];
+  var proximo = 3;
+  http.Response recusaCurta() => http.Response(
+        jsonEncode({
+          'detail': [
+            {
+              'loc': ['body', 'identificacao'],
+              'msg': 'String should have at least 3 characters',
+            },
+          ],
+        }),
+        422,
+      );
+  return MockClient((pedido) async {
+    pedidos++;
+    if (pedido.headers['Authorization'] == null) {
+      return http.Response('{"detail": "Not authenticated"}', 401);
+    }
+    final id = pedido.url.pathSegments.last; // '' em /simulados/, '2' em /simulados/2
+    if (pedido.method == 'POST') {
+      final dados = jsonDecode(pedido.body) as Map<String, dynamic>;
+      ultimoCorpo = dados;
+      if ((dados['identificacao'] as String).length < 3) {
+        return recusaCurta();
+      }
+      final novo = {
+        'id': proximo++,
+        'identificacao': dados['identificacao'],
+        'data_aplicacao': dados['data_aplicacao'],
+        'usuario_id': 1,
+        'ativo': true,
+      };
+      acervo.add(novo);
+      return http.Response(jsonEncode(novo), 201);
+    }
+    if (id.isEmpty) {
+      return http.Response(jsonEncode(acervo), 200);
+    }
+    final i = acervo.indexWhere((s) => '${s['id']}' == id);
+    if (i < 0) {
+      return http.Response('{"detail": "Simulado $id nao esta no seu acervo"}', 404);
+    }
+    if (pedido.method == 'PATCH') {
+      final dados = jsonDecode(pedido.body) as Map<String, dynamic>;
+      ultimoCorpo = dados;
+      if ((dados['identificacao'] as String).length < 3) {
+        return recusaCurta();
+      }
+      acervo[i] = {...acervo[i], ...dados};
+      return http.Response(jsonEncode(acervo[i]), 200);
+    }
+    if (pedido.method == 'DELETE') {
+      acervo.removeAt(i);
+      return http.Response('', 204);
+    }
+    return http.Response(jsonEncode(acervo[i]), 200);
+  });
+}
+
 // O app de verdade, com os services de mentira no topo, como o main.dart faz.
 // O .value entrega ao Provider um objeto que já existe, em vez de criá-lo.
 // Sem a API de simulados, a de mentira responde uma lista vazia.
@@ -156,6 +223,32 @@ Future<void> preencherECadastrar(WidgetTester tester, String email, String senha
   await tester.tap(find.widgetWithText(ElevatedButton, 'Cadastrar'));
   await tester.pumpAndSettle();
 }
+
+// Os campos do formulário, na ordem em que aparecem na tela.
+Finder get campoIdentificacao => find.byType(TextFormField).at(0);
+Finder get campoData => find.byType(TextFormField).at(1);
+
+// Toca no + da lista e preenche o formulário novo.
+Future<void> abrirOFormularioEPreencher(WidgetTester tester, String identificacao, String data) async {
+  await tester.tap(find.byIcon(Icons.add));
+  await tester.pumpAndSettle();
+  await tester.enterText(campoIdentificacao, identificacao);
+  await tester.enterText(campoData, data);
+}
+
+Future<void> tocarEmSalvar(WidgetTester tester) async {
+  await tester.tap(find.widgetWithText(ElevatedButton, 'Salvar'));
+  await tester.pumpAndSettle();
+}
+
+// Abre o detalhe de um simulado da lista, pelo toque.
+Future<void> abrirODetalhe(WidgetTester tester, String identificacao) async {
+  await tester.tap(find.text(identificacao));
+  await tester.pumpAndSettle();
+}
+
+// O botão Excluir DENTRO do diálogo (o do detalhe tem o mesmo texto).
+Finder get excluirDoDialogo => find.descendant(of: find.byType(AlertDialog), matching: find.text('Excluir'));
 
 // A Ana já entrou (a sessão de mentira, com o token dela) e toca em Ver os simulados.
 Future<void> abrirOsSimulados(WidgetTester tester, http.Client simulados) async {
@@ -425,6 +518,113 @@ void main() {
     expect(find.text('ENEM 2025 - Dia 1'), findsOneWidget);
   });
 
+  // Criar, editar e excluir pelo app: o formulário, as duas pontas da validação
+  // e o diálogo de confirmação.
+  testWidgets('o + abre o formulário vazio; salvar cria o simulado e a lista o mostra', (tester) async {
+    await abrirOsSimulados(tester, acervoDeMentira());
+    expect(find.byType(ListTile), findsNWidgets(2));
+
+    await abrirOFormularioEPreencher(tester, 'Simulado Novo', '15/12/2025');
+    await tocarEmSalvar(tester);
+
+    expect(find.byType(SimuladosScreen), findsOneWidget);
+    expect(find.byType(FormularioScreen), findsNothing);
+    expect(find.byType(ListTile), findsNWidgets(3));
+    expect(find.text('Simulado Novo'), findsOneWidget);
+    expect(find.text('15/12/2025'), findsOneWidget);
+    // o dono nao vai no corpo: a API o tira do token (RN-05)
+    expect(ultimoCorpo, {'identificacao': 'Simulado Novo', 'data_aplicacao': '2025-12-15'});
+  });
+
+  testWidgets('a ponta do app: campos vazios mostram as frases e nenhum pedido sai', (tester) async {
+    await abrirOsSimulados(tester, acervoDeMentira());
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+    pedidos = 0;
+
+    await tocarEmSalvar(tester);
+
+    expect(find.text('Informe a identificação'), findsOneWidget);
+    expect(find.text('Informe uma data válida, como 09/11/2025'), findsOneWidget);
+    expect(find.byType(FormularioScreen), findsOneWidget);
+    expect(pedidos, 0);
+  });
+
+  testWidgets('uma data que não existe, como 31/02, é recusada no app, sem pedido', (tester) async {
+    await abrirOsSimulados(tester, acervoDeMentira());
+    await abrirOFormularioEPreencher(tester, 'Simulado Novo', '31/02/2026');
+    pedidos = 0;
+
+    await tocarEmSalvar(tester);
+
+    expect(find.text('Informe uma data válida, como 09/11/2025'), findsOneWidget);
+    expect(pedidos, 0);
+  });
+
+  testWidgets('a ponta da API: a frase do 422 aparece na tela e o formulário fica aberto', (tester) async {
+    await abrirOsSimulados(tester, acervoDeMentira());
+    await abrirOFormularioEPreencher(tester, 'AB', '15/12/2025');
+
+    await tocarEmSalvar(tester);
+
+    expect(find.text('identificacao: String should have at least 3 characters'), findsOneWidget);
+    expect(find.byType(FormularioScreen), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'Salvar'), findsOneWidget);
+  });
+
+  testWidgets('Editar abre o mesmo formulário preenchido; salvar muda o simulado na lista', (tester) async {
+    await abrirOsSimulados(tester, acervoDeMentira());
+    await abrirODetalhe(tester, 'ENEM 2025 - Dia 1');
+
+    await tester.tap(find.text('Editar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(FormularioScreen), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'ENEM 2025 - Dia 1'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, '09/11/2025'), findsOneWidget);
+
+    await tester.enterText(campoIdentificacao, 'ENEM 2025 - Dia 2');
+    await tocarEmSalvar(tester);
+
+    expect(find.byType(SimuladosScreen), findsOneWidget);
+    expect(find.text('ENEM 2025 - Dia 2'), findsOneWidget);
+    expect(find.text('ENEM 2025 - Dia 1'), findsNothing);
+    expect(ultimoCorpo, {'identificacao': 'ENEM 2025 - Dia 2', 'data_aplicacao': '2025-11-09'});
+  });
+
+  testWidgets('Excluir pergunta antes: Cancelar não muda nada, Excluir tira da lista', (tester) async {
+    await abrirOsSimulados(tester, acervoDeMentira());
+    await abrirODetalhe(tester, 'Simulado de Matemática');
+
+    await tester.tap(find.text('Excluir'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('Excluir Simulado de Matemática?'), findsOneWidget);
+
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(SimuladoScreen), findsOneWidget);
+
+    await tester.tap(find.text('Excluir'));
+    await tester.pumpAndSettle();
+    await tester.tap(excluirDoDialogo);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SimuladosScreen), findsOneWidget);
+    expect(find.text('Simulado de Matemática'), findsNothing);
+    expect(find.byType(ListTile), findsNWidgets(1));
+  });
+
+  testWidgets('sem quem o abriu (o F5 no formulário), a tela mostra a lista', (tester) async {
+    await abrirOsSimulados(tester, acervoDeMentira());
+
+    Navigator.of(tester.element(find.byType(SimuladosScreen))).pushNamedAndRemoveUntil(AppRoutes.formulario, (rota) => false);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SimuladosScreen), findsOneWidget);
+    expect(find.byType(TextFormField), findsNothing);
+  });
+
   // O service testado sozinho, sem tela nenhuma: é o que as camadas compram.
   test('o service recusa campos vazios sem nem chamar a API', () async {
     final sessao = sessaoDeMentira();
@@ -586,5 +786,83 @@ void main() {
         'Não consegui falar com a API. O uvicorn está rodando?',
       )),
     );
+  });
+
+  test('o repositório cria com POST: JSON no corpo, o token no cabeçalho e sem o dono', () async {
+    late http.Request enviado;
+    final cliente = MockClient((pedido) async {
+      enviado = pedido;
+      return http.Response(jsonEncode(doisSimulados.first), 201);
+    });
+
+    final simulado = await SimuladoRepository(cliente: cliente).criar('tk-123', 'ENEM 2025 - Dia 1', DateTime(2025, 11, 9));
+
+    expect(enviado.method, 'POST');
+    expect(enviado.url.path, '/simulados/');
+    expect(enviado.headers['Authorization'], 'Bearer tk-123');
+    expect(enviado.headers['Content-Type'], contains('application/json'));
+    expect(jsonDecode(enviado.body), {'identificacao': 'ENEM 2025 - Dia 1', 'data_aplicacao': '2025-11-09'});
+    expect(simulado.id, 1);
+  });
+
+  test('o repositório edita com PATCH em /simulados/2 e exclui com DELETE', () async {
+    final vistos = <String>[];
+    final cliente = MockClient((pedido) async {
+      vistos.add('${pedido.method} ${pedido.url.path}');
+      if (pedido.method == 'DELETE') {
+        return http.Response('', 204);
+      }
+      return http.Response(jsonEncode(doisSimulados.last), 200);
+    });
+    final repositorio = SimuladoRepository(cliente: cliente);
+
+    await repositorio.atualizar('tk-123', 2, 'Simulado de Matemática', DateTime(2026, 3, 5));
+    await repositorio.excluir('tk-123', 2);
+
+    expect(vistos, ['PATCH /simulados/2', 'DELETE /simulados/2']);
+  });
+
+  test('o repositório transforma a recusa da API (404 ao excluir) em RecusaDaApi', () async {
+    final cliente = MockClient((pedido) async => http.Response('{"detail": "Simulado 9 nao esta no seu acervo"}', 404));
+
+    await expectLater(
+      SimuladoRepository(cliente: cliente).excluir('tk-123', 9),
+      throwsA(isA<RecusaDaApi>().having((e) => e.status, 'status', 404)),
+    );
+  });
+
+  test('o service traduz o 422 do criar: a frase da API vai para a tela', () async {
+    final sessao = sessaoDeMentira();
+    await sessao.entrar('ana@biblioteca.com', 'segredo123');
+    final servico = SimuladoService(SimuladoRepository(cliente: acervoDeMentira()), sessao);
+
+    await expectLater(
+      servico.criar('AB', DateTime(2025, 11, 9)),
+      throwsA(isA<ErroDeSimulados>().having(
+        (e) => e.mensagem,
+        'mensagem',
+        'identificacao: String should have at least 3 characters',
+      )),
+    );
+  });
+
+  test('lerData aceita dd/mm/aaaa de verdade e recusa o resto', () {
+    expect(lerData('09/11/2025'), DateTime(2025, 11, 9));
+    expect(lerData('9/1/2026'), DateTime(2026, 1, 9)); // dia e mês podem ter 1 dígito; o ano, não
+    expect(lerData('29/02/2024'), DateTime(2024, 2, 29)); // ano bissexto
+    for (final invalida in ['', '9/11', '31/02/2026', '29/02/2025', 'aa/bb/cccc', '09/11/25', '09-11-2025', '32/01/2026', '10/13/2026']) {
+      expect(lerData(invalida), isNull, reason: 'devia recusar "$invalida"');
+    }
+  });
+
+  test('dataParaApi escreve aaaa-mm-dd e formatarData escreve dd/mm/aaaa', () {
+    expect(dataParaApi(DateTime(2025, 3, 5)), '2025-03-05');
+    expect(formatarData(DateTime(2025, 3, 5)), '05/03/2025');
+  });
+
+  test('fraseDaApi tira o "Value error, " que o Pydantic põe na frente', () {
+    const corpo = '{"detail": [{"loc": ["body", "ano"], "msg": "Value error, o ano precisa estar entre 1450 e 2100"}]}';
+
+    expect(fraseDaApi(corpo), 'ano: o ano precisa estar entre 1450 e 2100');
   });
 }
