@@ -111,6 +111,7 @@ Este projeto será desenvolvido utilizando as seguintes tecnologias:
 *   **Containerização:** Docker
 *   **Controle de Versão:** Git e GitHub
 *   **Gerenciamento de Dependências:** Poetry
+*   **Testes (backend):** pytest
 
 ---
 
@@ -149,6 +150,24 @@ A lógica do padrão Facade será:
 7. Criar um registro em Resultado com esses valores agregados.
 8. Retornar o resultado ao cliente.
 
+🖊️ *Diário de decisões — Encontro 12 (testes unitários)*
+
+**O que estava difícil de testar**
+
+No teste do cadastrar usuário foi preciso criar o dicionário de dados dentro de uma função e não como variável. Isso foi preciso porque a chave `senha` é removida do dicionário recebido, e o hash vai para um dicionário novo. Percebi que uma função que muda os argumentos que recebe é difícil de testar e de usar, porque, se o dicionário for usado uma segunda vez, o dado virá sem a senha.
+
+Para testar o `gerar_hash`, que só recebe uma senha e devolve um hash, precisei criar um `conftest.py` definindo a `SECRET_KEY`. Isso foi necessário porque o `seguranca.py` exige a `SECRET_KEY` quando é importado. Percebi que o módulo estava acoplado a uma configuração que a função de hash não usa.
+
+**O que foi fácil de testar**
+
+Foi fácil testar os `services` porque eles são as regras de negócio: não levantam erro de protocolo (o controller faz isso), não montam consulta (o repository faz isso) e não abrem conexão (o `get_db` faz isso). Assim, só precisei chamar as funções direto, usando um banco em memória.
+
+**O que os limites ensinaram**
+
+Se eu tivesse testado só os casos normais, como uma questão no meio de uma faixa de questões, uma mudança no começo da faixa passaria despercebida. O teste da questão 0 foi o único que pegou o erro, porque ela está fora da faixa, logo antes do começo.
+
+Os atritos encontrados nos testes revelaram que talvez seja interessante ler a `SECRET_KEY` dentro das funções que a usam, e não no topo do arquivo.
+
 ---
 
 ## 🚀 Como Rodar o Projeto
@@ -185,6 +204,28 @@ Para configurar e iniciar a API do GabGrading, siga os passos abaixo:
 
 5.  **Acessar a documentação interativa:**
     Abra seu navegador e vá para `http://127.0.0.1:8000/docs` para explorar os endpoints da API e realizar testes.
+
+---
+
+## 🧪 Como Rodar os Testes
+
+Os testes do backend usam o `pytest` e ficam em `backend/test/`. O `poetry install` já instala o `pytest` (grupo de desenvolvimento). Dentro da pasta `backend/`, execute:
+
+```bash
+poetry run pytest -v
+```
+
+Não é preciso criar o `.env` nem subir a API: o `test/conftest.py` define uma `SECRET_KEY` de teste e cada teste recebe um banco SQLite em memória, novo e vazio, sem encostar no `gabgrading.db`.
+
+| Arquivo | O que testa |
+| :------ | :---------- |
+| `test_back.py` | A regra de divisão de área por faixa (Strategy e Factory), com os limites de cada lado e a recusa (`pytest.raises`) |
+| `test_seguranca.py` | O hash da senha (RN-02) e o token JWT, incluindo o token com assinatura inválida |
+| `test_usuario.py` | Cadastro, e-mail repetido (RN-01), login e conta inativa (RN-06) |
+| `test_simulados.py` | Posse por dono (RN-08), soft delete (RN-09) e visibilidade (RN-18) |
+| `test_questoes.py` | Numeração automática por simulado (RN-12), posse (RN-11) e visibilidade herdada (RN-13) |
+
+Para rodar um arquivo só: `poetry run pytest test/test_back.py -v`.
 
 ---
 
