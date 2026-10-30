@@ -11,8 +11,11 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.database import Base
+from app.alunos import models as _alunos  # noqa: F401
 from app.questoes import models as _questoes  # noqa: F401
+from app.respostas import models as _respostas  # noqa: F401
 from app.simulados import models as _simulados  # noqa: F401
+from app.turma import models as _turma  # noqa: F401
 from app.usuarios import models as _usuarios  # noqa: F401
 
 
