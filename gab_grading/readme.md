@@ -8,8 +8,8 @@ O GabGrading é um sistema robusto e intuitivo projetado para o cadastro e geren
 
 O sistema conta com autenticação completa, controle de posse dos dados por usuário e um mecanismo de exclusão reversível (`soft delete`) para preservar a integridade histórica dos registros.
 
-**Foco Atual:** Gerenciamento de simulados e questões.
-**Expansão Futura:** Funcionalidades de aplicação de simulados, registro de respostas de alunos e correção automática foram identificadas como evolução natural do projeto, mas ficam fora do escopo atual e estão registradas como expansão futura, como outro ciclo incremental do sistema.
+**Foco Atual:** Gerenciamento de simulados e questões, e a correção deles: o usuário cadastra turmas e alunos, lança à mão as respostas de cada aluno em um simulado e o sistema corrige, devolvendo acertos, nota e acertos por componente curricular.
+**Expansão Futura:** Ler o cartão-resposta por visão computacional, para que as respostas dos alunos entrem sem digitação. Fica como outro ciclo incremental do sistema.
 
 ---
 
@@ -84,12 +84,55 @@ O sistema conta com autenticação completa, controle de posse dos dados por usu
 | `componente_curricular'| Enum                       | NOT NULL, conjunto fechado               |
 | `simulado_id`          | Integer                    | Chave estrangeira (`Simulado`), NOT NULL |
 
+### 🏫 Turma
+
+| Atributo     | Tipo    | Restrições                               |
+| :----------- | :------ | :--------------------------------------- |
+| `id`         | Serial  | Chave primária, NOT NULL                 |
+| `nome`       | Varchar | NOT NULL                                 |
+| `usuario_id` | Integer | Chave estrangeira (`Usuário`), NOT NULL  |
+| `ativo`      | Boolean | NOT NULL, padrão `true`                  |
+
+### 🧑‍🎓 Aluno
+
+| Atributo   | Tipo    | Restrições                               |
+| :--------- | :------ | :--------------------------------------- |
+| `id`       | Serial  | Chave primária, NOT NULL                 |
+| `nome`     | Varchar | NOT NULL                                 |
+| `turma_id` | Integer | Chave estrangeira (`Turma`), NOT NULL    |
+| `ativo`    | Boolean | NOT NULL, padrão `true`                  |
+
+### ✍️ Resposta
+
+O que um aluno marcou em uma questão.
+
+| Atributo                | Tipo                 | Restrições                                              |
+| :---------------------- | :------------------- | :------------------------------------------------------ |
+| `id`                    | Serial               | Chave primária, NOT NULL                                |
+| `aluno_id`              | Integer              | Chave estrangeira (`Aluno`), NOT NULL                   |
+| `questao_id`            | Integer              | Chave estrangeira (`Questão`), NOT NULL                 |
+| `alternativa_escolhida` | Enum (A, B, C, D, E) | NOT NULL; única por par (`aluno_id`, `questao_id`)      |
+
 ---
 
 ## 🔗 Relacionamentos
 
 *   **Usuário 1 — N Simulado:** Cada usuário pode possuir muitos simulados; cada simulado pertence a um único usuário.
 *   **Simulado 1 — N Questão:** Cada simulado pode possuir muitas questões; cada questão pertence a um único simulado.
+*   **Usuário 1 — N Turma:** Cada usuário cadastra as próprias turmas.
+*   **Turma 1 — N Aluno:** Todo aluno pertence a uma turma; a posse do aluno é a posse da turma.
+*   **Aluno 1 — N Resposta N — 1 Questão:** A resposta liga um aluno a uma questão do simulado.
+
+---
+
+## 🎯 Turmas, Respostas e Correção
+
+*   `/turmas` e `/turmas/{turma_id}/alunos`: CRUD com `soft delete`, sempre restrito ao usuário logado. Turma ou aluno de outra pessoa responde `404`, como se não existisse.
+*   `PUT /simulados/{simulado_id}/alunos/{aluno_id}/respostas`: lança o gabarito do aluno em lote, e **substitui** o anterior. A questão que ficar de fora fica em branco. A mesma questão duas vezes, ou uma questão que o simulado não tem, responde `422` e não grava nada (tudo ou nada).
+*   `GET /simulados/{simulado_id}/alunos/{aluno_id}/respostas`: o que o aluno marcou.
+*   `GET /simulados/{simulado_id}/alunos/{aluno_id}/resultado`: a correção, calculada na hora: `total_questoes`, `total_acertos`, `nota` (de 0 a 10, com duas casas, questão em branco conta como erro) e `acertos_por_componente` (RN-20).
+
+A conta da nota mora em `respostas/correcao.py`, uma função que recebe valores e devolve a resposta, sem banco nem HTTP. O `respostas/service.py` é a fachada: confere o dono do simulado e do aluno, busca o gabarito e as respostas e chama a função.
 
 ---
 
@@ -190,7 +233,7 @@ Para configurar e iniciar a API do GabGrading, siga os passos abaixo:
     *   Para `SECRET_KEY`, gere uma chave aleatória e forte.
 
 3.  **Aplicar as migrações do banco de dados:**
-    O Alembic gerencia o esquema do banco. Execute o comando para criar as tabelas `usuarios`, `simulados` e `questoes`:
+    O Alembic gerencia o esquema do banco. Execute o comando para criar as tabelas `usuarios`, `simulados`, `questoes`, `turmas`, `alunos` e `respostas` (funciona também num banco vazio):
     ```bash
     poetry run alembic upgrade head
     ```
@@ -224,6 +267,9 @@ Não é preciso criar o `.env` nem subir a API: o `test/conftest.py` define uma 
 | `test_usuario.py` | Cadastro, e-mail repetido (RN-01), login e conta inativa (RN-06) |
 | `test_simulados.py` | Posse por dono (RN-08), soft delete (RN-09) e visibilidade (RN-18) |
 | `test_questoes.py` | Numeração automática por simulado (RN-12), posse (RN-11) e visibilidade herdada (RN-13) |
+| `test_correcao.py` | A conta da nota: acertos, nota de 0 a 10, questão em branco e acertos por componente (RN-20) |
+| `test_turmas_alunos.py` | Posse de turmas e alunos, soft delete e o aluno que some com a turma |
+| `test_respostas.py` | Lançar o gabarito em lote (substitui, tudo ou nada, recusas) e a correção ponta a ponta |
 
 Para rodar um arquivo só: `poetry run pytest test/test_back.py -v`.
 
