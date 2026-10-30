@@ -285,6 +285,9 @@ A tela de simulados chama `GET /simulados/` pelas camadas do app (tela, `Simulad
 Tocar num simulado abre o detalhe pela rota `/simulado`, com o id nos `arguments`: o detalhe busca o simulado na API (`GET /simulados/{id}`), para mostrar o dado de agora. Sem o id (um F5 no detalhe apaga os `arguments`), a tela mostra a lista.
 Para isso o backend passou a filtrar por dono (RN-08): a listagem devolve só os simulados do usuário do token, e ver, editar ou apagar o de outra pessoa responde 404.
 
+O app cria, edita e exclui simulados pelas camadas (tela, `SimuladoService`, `SimuladoRepository`), com o token no cabeçalho: `POST /simulados/`, `PATCH /simulados/{id}` e `DELETE /simulados/{id}`. Um formulário só (`FormularioScreen`) serve para criar e para editar, e a data pode ser digitada (dd/mm/aaaa) ou escolhida no calendário. O dono do simulado não vai no corpo: a API o tira do token (RN-05), e por isso o `SimuladoCriar` deixou de pedir o `usuario_id`.
+A validação acontece nas duas pontas: o `validator` de cada campo antes de enviar (identificação preenchida e data que existe, como 09/11/2025, e não 31/02), e a API, que recusa com 422; a frase da API aparece na tela. Excluir pede confirmação num diálogo. Depois de cada operação, a tela fecha com `true`, e a lista pede os simulados de novo.
+
 ---
 
 ## 🖼️ Protótipo Frontend
