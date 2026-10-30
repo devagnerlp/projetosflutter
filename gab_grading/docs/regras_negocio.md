@@ -44,4 +44,14 @@ Regras de Negócio 📋
 
 📌 RN-18- Toda listagem (GET) filtra por padrão apenas registros com ativo = true — um registro "excluído" não aparece mais nas telas, mesmo continuando no banco. **Implementada**
 
-🧮 RN-20- O sistema deve apresentar a quantidade de acertos por componente curricular para cada aluno
+🧮 RN-20- O sistema deve apresentar a quantidade de acertos por componente curricular para cada aluno **Implementada**
+
+**Turma, Aluno e Resposta** 🏫
+
+🏫 RN-21- Toda Turma pertence ao usuário logado (o `usuario_id` vem do token, nunca do corpo). Turma de outra pessoa, inativa ou inexistente retorna 404. A exclusão é soft delete. **Implementada**
+
+🧑‍🎓 RN-22- Todo Aluno pertence a uma Turma, e a posse dele é a da turma: criar, ver, editar ou apagar aluno só vale para o dono da turma, e o aluno some junto com a turma desativada. A exclusão é soft delete. **Implementada**
+
+✍️ RN-23- As respostas de um aluno em um simulado são lançadas em lote e substituem as anteriores. A mesma questão duas vezes, ou uma questão que o simulado não tem, é recusada (422) e nada é gravado. Questão fora do lote fica em branco. Só o dono do simulado e do aluno pode lançar. **Implementada**
+
+📝 RN-24- A correção é calculada na hora, sem gravar o resultado: total de questões, total de acertos, nota de 0 a 10 (acertos ÷ total × 10, em duas casas) e acertos por componente curricular. Questão em branco conta como erro; simulado sem questões tem nota 0. **Implementada**

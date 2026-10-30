@@ -1,12 +1,18 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from .alunos import controller as alunos_controller
+from .alunos.erros import AlunoNaoEncontrado, ErroDeAluno
 from .questoes import controller as questoes_controller
 from .questoes.erros import ErroDeQuestao, QuestaoNaoEncontrada
+from .respostas import controller as respostas_controller
+from .respostas.erros import ErroDeResposta, RespostaInvalida
 
 #from .database import Base, engine - saiu pq não usa mais o create_all.
 from .simulados import controller as simulados_controller
 from .simulados.erros import ErroDeSimulado, SimuladoNaoEncontrado
+from .turma import controller as turma_controller
+from .turma.erros import ErroDeTurma, TurmaNaoEncontrada
 from .usuarios import controller as usuarios_controller
 from .usuarios.erros import CredenciaisInvalidas, ErroDeUsuario
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +34,9 @@ app.add_middleware(
 # é um app por rota nova (entidade nova) que criamos, e o controller é quem sabe quais rotas existem. O app não sabe nada de simulados, só sabe que existe um controller que sabe.
 app.include_router(simulados_controller.router) #realiza guarda de rotas do controller de simulados - Padrão composite
 app.include_router(questoes_controller.router)
+app.include_router(turma_controller.router)
+app.include_router(alunos_controller.router)
+app.include_router(respostas_controller.router)
 app.include_router(usuarios_controller.router) #realiza guarda de rotas do controller de usuarios - Padrão composite
 
 @app.exception_handler(ErroDeSimulado)
@@ -39,6 +48,22 @@ def traduzir_recusa(request: Request, erro: ErroDeSimulado):
 @app.exception_handler(ErroDeQuestao)
 def traduzir_recusa_de_questao(request: Request, erro: ErroDeQuestao):
     codigo = 404 if isinstance(erro, QuestaoNaoEncontrada) else 409
+    return JSONResponse(status_code=codigo, content={"detail": str(erro)})
+
+@app.exception_handler(ErroDeTurma)
+def traduzir_recusa_de_turma(request: Request, erro: ErroDeTurma):
+    codigo = 404 if isinstance(erro, TurmaNaoEncontrada) else 409
+    return JSONResponse(status_code=codigo, content={"detail": str(erro)})
+
+@app.exception_handler(ErroDeAluno)
+def traduzir_recusa_de_aluno(request: Request, erro: ErroDeAluno):
+    codigo = 404 if isinstance(erro, AlunoNaoEncontrado) else 409
+    return JSONResponse(status_code=codigo, content={"detail": str(erro)})
+
+@app.exception_handler(ErroDeResposta)
+def traduzir_recusa_de_resposta(request: Request, erro: ErroDeResposta):
+    # 422: o corpo chegou, mas nao faz sentido para este simulado.
+    codigo = 422 if isinstance(erro, RespostaInvalida) else 409
     return JSONResponse(status_code=codigo, content={"detail": str(erro)})
 
 @app.exception_handler(ErroDeUsuario)
