@@ -31,6 +31,11 @@ class AppDrawer extends StatelessWidget {
             onTap: () => Navigator.pushReplacementNamed(context, AppRoutes.simulados),
           ),
           ListTile(
+            leading: const Icon(Icons.groups),
+            title: const Text('Turmas'),
+            onTap: () => Navigator.pushReplacementNamed(context, AppRoutes.turmas),
+          ),
+          ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Perfil'),
             onTap: () => Navigator.pushReplacementNamed(context, AppRoutes.perfil),

@@ -288,6 +288,16 @@ Para isso o backend passou a filtrar por dono (RN-08): a listagem devolve só os
 O app cria, edita e exclui simulados pelas camadas (tela, `SimuladoService`, `SimuladoRepository`), com o token no cabeçalho: `POST /simulados/`, `PATCH /simulados/{id}` e `DELETE /simulados/{id}`. Um formulário só (`FormularioScreen`) serve para criar e para editar, e a data pode ser digitada (dd/mm/aaaa) ou escolhida no calendário. O dono do simulado não vai no corpo: a API o tira do token (RN-05), e por isso o `SimuladoCriar` deixou de pedir o `usuario_id`.
 A validação acontece nas duas pontas: o `validator` de cada campo antes de enviar (identificação preenchida e data que existe, como 09/11/2025, e não 31/02), e a API, que recusa com 422; a frase da API aparece na tela. Excluir pede confirmação num diálogo. Depois de cada operação, a tela fecha com `true`, e a lista pede os simulados de novo.
 
+### 🧭 O fluxo completo pelo app
+
+1.  **Simulados** (menu): o `+` cria, e o detalhe edita e exclui.
+2.  **Questões e gabarito** (no detalhe do simulado): lista as questões com a alternativa certa de cada uma. O `+` cadastra uma questão (componente curricular e alternativa certa em listas fechadas, conteúdo opcional), e o toque edita. O número da questão é atribuído pela API, e a questão não se exclui (RN-13).
+3.  **Turmas** (menu): o `+` cadastra, e o detalhe da turma edita, exclui e mostra os alunos, onde se adiciona, edita e exclui cada aluno.
+4.  **Corrigir alunos** (no detalhe do simulado): escolhe-se o aluno, de qualquer turma. A tela de respostas mostra uma linha por questão com as letras A a E; tocar na letra marca, e tocar de novo desmarca (a questão em branco conta como erro). **Salvar e corrigir** envia o gabarito do aluno de uma vez (`PUT`, que substitui o anterior) e abre o resultado.
+5.  **Resultado:** a nota (de 0 a 10), os acertos e os acertos por componente curricular (RN-20). Quem calcula é a API, e o app só mostra.
+
+As telas novas seguem o padrão do CRUD de simulados (tela, service, repository, token da sessão e a frase da API na tela). Como elas repetem o mesmo pedido à API, os repositórios usam um cliente comum (`ApiCliente`), e os services, a função `traduzir`, que transforma a recusa da API na frase que a tela mostra. O bloco dos quatro estados (carregando, erro, vazia e a lista) virou o widget `EstadosDaTela`, usado pelas telas novas.
+
 ---
 
 ## 🖼️ Protótipo Frontend

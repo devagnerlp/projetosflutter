@@ -172,6 +172,20 @@ class _SimuladoScreenState extends State<SimuladoScreen> {
                   style: const TextStyle(color: Colors.red),
                 ),
               ],
+              const Divider(height: 32),
+              // Daqui o simulado ganha o gabarito (as questões) e é corrigido.
+              ListTile(
+                leading: const Icon(Icons.checklist),
+                title: const Text('Questões e gabarito'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.pushNamed(context, AppRoutes.questoes, arguments: simulado.id),
+              ),
+              ListTile(
+                leading: const Icon(Icons.fact_check),
+                title: const Text('Corrigir alunos'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.pushNamed(context, AppRoutes.correcao, arguments: simulado.id),
+              ),
             ],
           );
         },
