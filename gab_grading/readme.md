@@ -213,6 +213,22 @@ Os atritos encontrados nos testes revelaram que talvez seja interessante ler a `
 
 ---
 
+## 🧹 Refatoração (Encontro 10)
+
+Três cheiros achados com as seis perguntas do encontro e arrumados em um commit `refactor:` cada, sem mudar o que o sistema faz.
+
+| Cheiro | Onde | Antes | Depois | O que doía |
+| :----- | :--- | :---- | :----- | :--------- |
+| duplicado | `backend/app/main.py`, linhas 42-67 | cinco funções `traduzir_recusa_de_…`, cada uma com `codigo = 404 if isinstance(erro, TurmaNaoEncontrada) else 409` | uma tabela `RECUSAS = {ErroDeTurma: (TurmaNaoEncontrada, 404), …}` e uma função `tradutor_de_recusa` que monta cada tradutor | cada entidade nova copiava uma função inteira; agora custa uma linha |
+| número mágico | `backend/app/turma/schema.py` (linhas 7, 8, 13 e 31) e `backend/app/alunos/schemas.py` (linhas 7 e 26) | `if len(nome) < 2:` com "pelo menos 2 caracteres" na mensagem, e `max_length=120` escrito em quatro lugares | `NOME_MINIMO = 2` e `NOME_MAXIMO = 120`, usados na condição, na mensagem e nos quatro campos | o 2 estava escrito duas vezes, e nada dizia que o 120 é o tamanho da coluna do banco |
+| função longa (e mais de um motivo para mudar) | `backend/app/respostas/service.py`, `lancar` (linhas 38-62, 25 linhas) | a mesma função preparava, validava o gabarito (questão repetida, ou que o simulado não tem) e gravava | `_conferir_itens` só valida, e o `lancar` conta a história em 16 linhas: prepara, confere, grava, devolve | para mudar a regra do gabarito era preciso ler a gravação junto |
+
+**Rede de segurança:** os testes de `backend/test/`, que estavam verdes antes e depois de cada passo (102 testes). Os dois pontos que ainda não tinham teste ganharam um commit `test:` de caracterização antes de qualquer mudança (`test_tradutores_de_erro.py` e `test_nomes.py`, 30 testes que registram o comportamento de hoje). Durante as refatorações nenhum teste foi alterado: o `git diff --name-status` desde a `main` mostra só esses dois arquivos de teste, como novos. Para provar que a rede pega erro, troquei o 404 da turma por 400 (falhou 1 teste) e o mínimo do nome de 2 para 3 (falharam 2), e desfiz com `git restore`.
+
+**Cheiros que vi e deixei de fora:** o mesmo mínimo de 2 caracteres em `usuarios/schemas.py` (a regra do nome da pessoa, que é outra) e os nomes `q`, `r` e `i` nas listas de `respostas/service.py` (o cheiro mais leve dos que achei).
+
+---
+
 ## 🚀 Como Rodar o Projeto
 
 Para configurar e iniciar a API do GabGrading, siga os passos abaixo:
