@@ -39,32 +39,31 @@ app.include_router(alunos_controller.router)
 app.include_router(respostas_controller.router)
 app.include_router(usuarios_controller.router) #realiza guarda de rotas do controller de usuarios - Padrão composite
 
-@app.exception_handler(ErroDeSimulado)
-def traduzir_recusa(request: Request, erro: ErroDeSimulado):
-    """O unico lugar do sistema que transforma recusa em numero HTTP."""
-    codigo = 404 if isinstance(erro, SimuladoNaoEncontrado) else 409
-    return JSONResponse(status_code=codigo, content={"detail": str(erro)})
-
-@app.exception_handler(ErroDeQuestao)
-def traduzir_recusa_de_questao(request: Request, erro: ErroDeQuestao):
-    codigo = 404 if isinstance(erro, QuestaoNaoEncontrada) else 409
-    return JSONResponse(status_code=codigo, content={"detail": str(erro)})
-
-@app.exception_handler(ErroDeTurma)
-def traduzir_recusa_de_turma(request: Request, erro: ErroDeTurma):
-    codigo = 404 if isinstance(erro, TurmaNaoEncontrada) else 409
-    return JSONResponse(status_code=codigo, content={"detail": str(erro)})
-
-@app.exception_handler(ErroDeAluno)
-def traduzir_recusa_de_aluno(request: Request, erro: ErroDeAluno):
-    codigo = 404 if isinstance(erro, AlunoNaoEncontrado) else 409
-    return JSONResponse(status_code=codigo, content={"detail": str(erro)})
-
-@app.exception_handler(ErroDeResposta)
-def traduzir_recusa_de_resposta(request: Request, erro: ErroDeResposta):
+# Cada familia de erros (uma por entidade) tem UMA recusa que vira um codigo
+# proprio: "nao achei" e' 404, e "isso nao faz sentido" e' 422. Qualquer outra
+# recusa da familia e' um conflito (409). Entidade nova: uma linha aqui.
+RECUSAS = {
+    ErroDeSimulado: (SimuladoNaoEncontrado, 404),
+    ErroDeQuestao: (QuestaoNaoEncontrada, 404),
+    ErroDeTurma: (TurmaNaoEncontrada, 404),
+    ErroDeAluno: (AlunoNaoEncontrado, 404),
     # 422: o corpo chegou, mas nao faz sentido para este simulado.
-    codigo = 422 if isinstance(erro, RespostaInvalida) else 409
-    return JSONResponse(status_code=codigo, content={"detail": str(erro)})
+    ErroDeResposta: (RespostaInvalida, 422),
+}
+
+def tradutor_de_recusa(recusa_especifica, codigo_da_especifica):
+    """O unico lugar do sistema que transforma recusa em numero HTTP.
+
+    Monta o tradutor de uma familia de erros: a recusa especifica vira o codigo
+    dela, e as demais da familia viram 409.
+    """
+    def traduzir(request: Request, erro: Exception):
+        codigo = codigo_da_especifica if isinstance(erro, recusa_especifica) else 409
+        return JSONResponse(status_code=codigo, content={"detail": str(erro)})
+    return traduzir
+
+for familia, (especifica, codigo) in RECUSAS.items():
+    app.add_exception_handler(familia, tradutor_de_recusa(especifica, codigo))
 
 @app.exception_handler(ErroDeUsuario)
 def traduzir_recusa_de_usuario(request: Request, erro: ErroDeUsuario):

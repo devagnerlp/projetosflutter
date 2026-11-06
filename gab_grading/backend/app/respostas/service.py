@@ -35,15 +35,10 @@ def listar(db, usuario, simulado_id, aluno_id):
     ]
 
 
-def lancar(db, usuario, simulado_id, aluno_id, itens):
-    """Grava o gabarito do aluno neste simulado, substituindo o anterior.
-
-    itens: lista de {"numero_questao": int, "alternativa": letra}. A questao
-    que ficar de fora fica em branco (e conta como erro na correcao).
-    """
-    aluno, questoes = _preparar(db, usuario, simulado_id, aluno_id)
-    por_numero = {q.numero_questao: q for q in questoes}
-
+def _conferir_itens(itens, por_numero, simulado_id):
+    # O gabarito que chegou tem que fazer sentido para ESTE simulado: nenhuma
+    # questao repetida, e so' questoes que ele tem. Qualquer problema recusa o
+    # gabarito inteiro, antes de gravar qualquer coisa.
     vistos = set()
     for item in itens:
         numero = item["numero_questao"]
@@ -53,6 +48,16 @@ def lancar(db, usuario, simulado_id, aluno_id, itens):
         if numero not in por_numero:
             raise RespostaInvalida(f"O simulado {simulado_id} nao tem a questao {numero}")
 
+
+def lancar(db, usuario, simulado_id, aluno_id, itens):
+    """Grava o gabarito do aluno neste simulado, substituindo o anterior.
+
+    itens: lista de {"numero_questao": int, "alternativa": letra}. A questao
+    que ficar de fora fica em branco (e conta como erro na correcao).
+    """
+    aluno, questoes = _preparar(db, usuario, simulado_id, aluno_id)
+    por_numero = {q.numero_questao: q for q in questoes}
+    _conferir_itens(itens, por_numero, simulado_id)
     repository.substituir(
         db,
         aluno.id,

@@ -1,10 +1,10 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ..turma.schema import nome_legivel
+from ..turma.schema import NOME_MAXIMO, nome_legivel
 
 
 class AlunoCriar(BaseModel):          # ENTRA no cadastro
-    nome: str = Field(max_length=120, description="Nome do aluno")
+    nome: str = Field(max_length=NOME_MAXIMO, description="Nome do aluno")
     # turma_id NAO entra aqui: e' posse, e vem da rota (/turmas/{id}/alunos).
 
     @field_validator("nome")
@@ -23,7 +23,7 @@ class AlunoPublico(BaseModel):        # SAI na resposta
 
 
 class AlunoAtualizar(BaseModel):      # ENTRA na edicao
-    nome: str | None = Field(None, max_length=120)
+    nome: str | None = Field(None, max_length=NOME_MAXIMO)
     # trocar o aluno de turma nao esta previsto no escopo.
 
     @field_validator("nome")
