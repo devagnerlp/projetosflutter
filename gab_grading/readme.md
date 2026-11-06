@@ -193,6 +193,14 @@ A lógica do padrão Facade será:
 7. Criar um registro em Resultado com esses valores agregados.
 8. Retornar o resultado ao cliente.
 
+🖊️ *Diário de decisões — Encontro 10 (Revisão e refatoração)*
+
+Revendo as decisões dos encontros anteriores, a que eu tomaria diferente é a do Strategy da divisão de área (Encontro 7).
+
+No Encontro 7, o Strategy decidia a área de uma questão a partir da faixa de questões (ou de um mapa de questão para área) que o simulado teria. Mas o sistema final não guarda isso em lugar nenhum: cada questão já traz o seu componente curricular (o campo `componente_curricular`), exigido pela RN-10. Por isso a correção pega o componente direto desse campo, e nenhum fluxo do sistema chama o Strategy (só os testes).
+
+O que eu faria hoje: ligar o Strategy ao simulado. O simulado passaria a guardar o tipo e os dados da divisão (as faixas ou o mapa), e a questão herdaria o componente a partir dele. Assim, num simulado de 90 questões, ninguém precisaria digitar o componente 90 vezes, e o padrão teria um uso real no sistema.
+
 🖊️ *Diário de decisões — Encontro 12 (testes unitários)*
 
 **O que estava difícil de testar**
