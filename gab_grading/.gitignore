@@ -3,3 +3,5 @@
 __pycache__/
 .env
 *.db
+# O poetry.lock do backend vai para o Git: o Docker instala as MESMAS versoes que voce testou.
+!backend/poetry.lock
