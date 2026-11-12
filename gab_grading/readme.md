@@ -306,11 +306,19 @@ Para rodar um arquivo só: `poetry run pytest test/test_back.py -v`.
 
 O sistema no Render são três peças, e a ordem importa: **o banco, a API, o app**, e a volta, em que a API libera o app no CORS.
 
+Atenção ao *Root Directory*: este repositório tem a pasta `gab_grading/` dentro dele (ao lado de outros projetos), então os caminhos começam por ela.
+
 | Peça | No Render | Como é feita |
 | :--- | :-------- | :----------- |
 | **Banco** | PostgreSQL, plano Free | só criar e copiar o endereço (aba *Internal*) |
-| **API** | Web Service, *Language* **Docker**, *Root Directory* `backend` | o `backend/Dockerfile`: instala as dependências do `poetry.lock` (sem as de desenvolvimento), copia o código e, ao ligar, roda `alembic upgrade head` e sobe o uvicorn na porta que o Render dá (`PORT`) |
-| **App** | Static Site, *Root Directory* `frontend`, *Publish Directory* `build/web` | o *Build Command* clona o Flutter e roda `flutter build web --dart-define=API_URL=$API_URL` |
+| **API** | Web Service, *Language* **Docker**, *Root Directory* `gab_grading/backend` | o `Dockerfile`: instala as dependências do `poetry.lock` (sem as de desenvolvimento), copia o código e, ao ligar, roda `alembic upgrade head` e sobe o uvicorn na porta que o Render dá (`PORT`) |
+| **App** | Static Site, *Root Directory* `gab_grading/frontend`, *Publish Directory* `build/web` | o *Build Command* clona o Flutter e roda `flutter build web --dart-define=API_URL=$API_URL` |
+
+*Build Command* do app, para colar no Render:
+
+```bash
+git clone https://github.com/flutter/flutter.git -b stable --depth 1 sdk && sdk/bin/flutter build web --dart-define=API_URL=$API_URL
+```
 
 **Variáveis** (na tela de cada serviço; elas fazem o papel do `.env`, que **nunca** vai para o Git):
 
