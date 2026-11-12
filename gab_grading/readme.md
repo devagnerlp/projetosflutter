@@ -294,8 +294,45 @@ Não é preciso criar o `.env` nem subir a API: o `test/conftest.py` define uma 
 | `test_correcao.py` | A conta da nota: acertos, nota de 0 a 10, questão em branco e acertos por componente (RN-20) |
 | `test_turmas_alunos.py` | Posse de turmas e alunos, soft delete e o aluno que some com a turma |
 | `test_respostas.py` | Lançar o gabarito em lote (substitui, tudo ou nada, recusas) e a correção ponta a ponta |
+| `test_tradutores_de_erro.py` | O código HTTP de cada recusa (404, 409, 422 e o 401 com o cabeçalho) |
+| `test_nomes.py` | As regras do nome de turma e de aluno: mínimo, máximo e espaços |
+| `test_cors.py` | O CORS aceita o endereço do app na nuvem (`ENDERECO_DO_APP`) e o `localhost` |
 
 Para rodar um arquivo só: `poetry run pytest test/test_back.py -v`.
+
+---
+
+## ☁️ Como Colocar no Ar (Docker e Render)
+
+O sistema no Render são três peças, e a ordem importa: **o banco, a API, o app**, e a volta, em que a API libera o app no CORS.
+
+| Peça | No Render | Como é feita |
+| :--- | :-------- | :----------- |
+| **Banco** | PostgreSQL, plano Free | só criar e copiar o endereço (aba *Internal*) |
+| **API** | Web Service, *Language* **Docker**, *Root Directory* `backend` | o `backend/Dockerfile`: instala as dependências do `poetry.lock` (sem as de desenvolvimento), copia o código e, ao ligar, roda `alembic upgrade head` e sobe o uvicorn na porta que o Render dá (`PORT`) |
+| **App** | Static Site, *Root Directory* `frontend`, *Publish Directory* `build/web` | o *Build Command* clona o Flutter e roda `flutter build web --dart-define=API_URL=$API_URL` |
+
+**Variáveis** (na tela de cada serviço; elas fazem o papel do `.env`, que **nunca** vai para o Git):
+
+| Onde | Variável | Valor |
+| :--- | :------- | :---- |
+| API | `DATABASE_URL` | o endereço do banco, trocando o começo `postgresql://` por `postgresql+psycopg://` (o driver do projeto é o psycopg 3) |
+| API | `SECRET_KEY` | gerada pelo próprio Render (*Generate*): não é a do seu `.env` |
+| API | `ENDERECO_DO_APP` | o endereço público do app, **sem a barra no fim**; é o que libera o CORS |
+| App | `API_URL` | o endereço público da API, sem a barra no fim; entra no app na hora de construir (`--dart-define`) |
+
+**O que o projeto tem para isso:**
+- `backend/Dockerfile` usa `python:3.13-slim`, a versão que o `pyproject.toml` exige (`>=3.13`), e `poetry install --only main --no-root`.
+- `backend/poetry.lock` está no Git (antes a regra `*.lock` o ignorava), para a imagem instalar as mesmas versões que foram testadas.
+- `backend/.dockerignore` deixa de fora o `.env`, os bancos locais (`*.db`) e os testes.
+- O driver `psycopg[binary]` entrou nas dependências, e as migrações do Alembic foram ajustadas para o PostgreSQL: o tipo `alternativacorreta` é criado uma vez só (antes, a migração das respostas o criaria de novo e daria *type already exists*), e o modo offline (`alembic upgrade head --sql`) passou a funcionar.
+- No `main.py`, o CORS aceita o endereço de `ENDERECO_DO_APP` além do `localhost`.
+- No app, `enderecoDaApi` vem de `--dart-define=API_URL=...`; sem ele, continua sendo `http://127.0.0.1:8000`, e o desenvolvimento local não muda.
+
+**Cuidados com o sistema público:**
+- **A chave:** a `SECRET_KEY` da nuvem é outra e não está no Git.
+- **O `/docs` fica público:** qualquer pessoa vê as rotas, e por isso cada rota exige o token (RN-04) e só devolve os dados do dono (RN-08).
+- **Plano gratuito:** a API dorme depois de 15 minutos sem uso (o primeiro acesso leva cerca de 1 minuto), e o banco expira 30 dias depois de criado e não tem backup.
 
 ---
 
