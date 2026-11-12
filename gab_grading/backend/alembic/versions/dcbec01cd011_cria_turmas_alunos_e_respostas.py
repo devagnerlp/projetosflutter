@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
@@ -16,6 +17,15 @@ revision: str = 'dcbec01cd011'
 down_revision: Union[str, Sequence[str], None] = 'd1518881a28e'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
+
+# As letras A-E ja' existem no banco: a migracao das questoes criou o tipo
+# `alternativacorreta`. No PostgreSQL, criar o mesmo tipo de novo da' "type
+# already exists", entao aqui ele so' e' USADO (create_type=False). No SQLite
+# nao ha tipo para criar, e continua sendo um texto de uma letra.
+ALTERNATIVA = sa.Enum('A', 'B', 'C', 'D', 'E', name='alternativacorreta').with_variant(
+    postgresql.ENUM('A', 'B', 'C', 'D', 'E', name='alternativacorreta', create_type=False),
+    'postgresql',
+)
 
 
 def upgrade() -> None:
@@ -47,7 +57,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('aluno_id', sa.Integer(), nullable=False),
     sa.Column('questao_id', sa.Integer(), nullable=False),
-    sa.Column('alternativa_escolhida', sa.Enum('A', 'B', 'C', 'D', 'E', name='alternativacorreta'), nullable=False),
+    sa.Column('alternativa_escolhida', ALTERNATIVA, nullable=False),
     sa.ForeignKeyConstraint(['aluno_id'], ['alunos.id'], name='fk_respostas_aluno'),
     sa.ForeignKeyConstraint(['questao_id'], ['questoes.id'], name='fk_respostas_questao'),
     sa.PrimaryKeyConstraint('id'),
