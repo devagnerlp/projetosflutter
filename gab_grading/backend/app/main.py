@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
@@ -24,9 +26,13 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(title="API do GabGrading", version="0.3.0")
 # O app Flutter roda no navegador, noutro endereco (a porta muda a cada
 # `flutter run`). O navegador so' deixa uma pagina falar com outro endereco
-# se a API disser que deixa: e' o CORS. Aqui: qualquer porta desta maquina.
+# se a API disser que deixa: e' o CORS. Aqui: qualquer porta desta maquina e,
+# na nuvem, o endereco publico do app, que vem da variavel ENDERECO_DO_APP (sem
+# a barra no fim: o navegador manda o endereco sem ela, e a comparacao e' exata).
+ENDERECO_DO_APP = os.getenv("ENDERECO_DO_APP", "").rstrip("/")
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=[ENDERECO_DO_APP] if ENDERECO_DO_APP else [],
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_methods=["*"],
     allow_headers=["*"],
