@@ -7,7 +7,7 @@ Create Date: 2026-09-24 18:13:25.725363
 """
 from typing import Sequence, Union
 
-from alembic import op
+from alembic import context, op
 import sqlalchemy as sa
 
 
@@ -26,8 +26,11 @@ def _criar_se_faltar(nome, indices, *colunas):
     (NoSuchTableError). Num banco que ja' tem as tabelas, nada muda.
 
     indices: lista de (nome_do_indice, coluna, unico).
+
+    No modo offline (alembic upgrade --sql) nao ha banco para perguntar: assume
+    que a tabela falta e escreve o SQL de criacao.
     """
-    if nome in sa.inspect(op.get_bind()).get_table_names():
+    if not context.is_offline_mode() and nome in sa.inspect(op.get_bind()).get_table_names():
         return
     op.create_table(nome, *colunas)
     for nome_do_indice, coluna, unico in indices:
