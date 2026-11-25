@@ -202,6 +202,16 @@ A lógica do padrão Facade será:
 7. Criar um registro em Resultado com esses valores agregados.
 8. Retornar o resultado ao cliente.
 
+**Revisto no fechamento do projeto:**
+
+**Antes:** a correção foi implementada como duas funções, `lancar` e `corrigir`, no `respostas/service.py`. Elas faziam a sequência, mas também tinham a regra do gabarito (o `_conferir_itens`, que recusa questão repetida ou que o simulado não tem) e chamavam o `repository` direto. Pelo Encontro 9, isso é um service que coordena, e não uma fachada: a fachada não decide nada e só chama services.
+
+**Depois:** a sequência foi para uma classe, a `CorrecaoFacade` (`respostas/fachada.py`), que recebe as quatro peças no `__init__` (questões, alunos, respostas e a conta) e tem um método para cada operação: `listar`, `lancar` e `corrigir`. O `respostas/service.py` ficou só com o assunto dele: conferir e gravar o gabarito (RN-23) e listar o que o aluno marcou. O controller recebe a fachada pelo `Depends(obter_correcao)`.
+
+**Por que valeu:** são quatro peças numa ordem que importa (primeiro o simulado, depois o aluno; se a ordem mudar, a recusa que aparece muda), e a rota não conhece nenhuma delas. A regra mudou de lugar sem mudar de comportamento: os testes de `test_respostas.py` só trocaram `service.` por `fachada.` na linha que chama, nenhum `assert` mudou, e os 105 testes continuam passando. Ficou diferente do plano acima em um ponto: o resultado não é gravado numa tabela, é calculado na hora (RN-24).
+
+**O que ficou de fora:** hoje a fachada tem um cliente só, a rota. O professor diz que ela vale mais quando há mais de um cliente; um segundo cliente natural seria o resultado da turma inteira num simulado, que não foi feito.
+
 🖊️ *Diário de decisões — Encontro 10 (Revisão e refatoração)*
 
 Revendo as decisões dos encontros anteriores, a que eu tomaria diferente é a do Strategy da divisão de área (Encontro 7).
