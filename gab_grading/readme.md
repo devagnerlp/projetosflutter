@@ -13,6 +13,15 @@ O sistema conta com autenticação completa, controle de posse dos dados por usu
 
 ---
 
+## 🌐 No ar
+
+- **O app:** https://gab-grading.onrender.com
+- **A API:** https://corrigeprovas.onrender.com/docs
+
+A API dorme depois de 15 minutos sem uso: o primeiro acesso leva cerca de 1 minuto. O banco é o PostgreSQL gratuito do Render, que não tem backup. Como o sistema foi posto no ar está na seção **Como Colocar no Ar (Docker e Render)**, mais abaixo.
+
+---
+
 ## ✨ Funcionalidades Detalhadas
 
 ### 🔐 Autenticação e Usuários
