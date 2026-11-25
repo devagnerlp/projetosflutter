@@ -73,6 +73,7 @@ Simplifica operações que envolvem vários componentes internos.
 Na camada service.py, coordenando validações, autenticação, controle de posse, repositories e regras de negócio.  
 
 - **✅ Já usei? Onde:**  
+Sim. Em `backend/app/respostas/fachada.py`, a classe `CorrecaoFacade`. Lançar ou corrigir o gabarito de um aluno mexe em quatro peças, nesta ordem: o service das questões (confere o simulado e traz o gabarito), o service dos alunos (confere o aluno), o service das respostas (grava ou lista o que o aluno marcou) e a conta da nota (`correcao.py`). A fachada recebe as quatro no `__init__`, guarda a sequência e não decide nada: a regra do gabarito (RN-23) fica no service das respostas, e quem fala com o banco continua sendo o repository. As rotas de `respostas/controller.py` recebem a fachada pronta pelo `Depends(obter_correcao)` e fazem uma chamada só.
 
 
 -------------------------------------- **PADRÕES APLICADOS** --------------------------------------
